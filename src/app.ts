@@ -102,10 +102,46 @@ app.use((req, res, next) => {
   }
 });
 
-// Rutas
+// Ruta de prueba
+app.get('/api/health', (req, res) => {
+  res.status(200).json({
+    status: 'ok',
+    message: 'API funcionando correctamente',
+    timestamp: new Date().toISOString()
+  });
+});
+
+// Rutas de autenticación
 app.use("/api/auth", authRoutes);
-app.use("/", (req, res) => {
-  res.send("Bienvenido a PadelSAG");
+
+// Ruta raíz
+app.get("/", (req, res) => {
+  res.json({
+    message: "Bienvenido a la API de PadelSAG",
+    status: "en funcionamiento",
+    timestamp: new Date().toISOString(),
+    environment: process.env.NODE_ENV || 'development',
+    docs: "/api-docs" // Si tienes documentación con Swagger/OpenAPI
+  });
+});
+
+// Manejador de errores 404
+app.use((req, res) => {
+  res.status(404).json({
+    status: 'error',
+    message: 'Ruta no encontrada',
+    path: req.originalUrl
+  });
+});
+
+// Manejador global de errores
+app.use((err: any, req: any, res: any, next: any) => {
+  console.error('Error no manejado:', err);
+  res.status(500).json({
+    status: 'error',
+    message: 'Error interno del servidor',
+    error: process.env.NODE_ENV === 'development' ? err.message : {}
+  });
 });
 
 // Conexión DB y levantar server
