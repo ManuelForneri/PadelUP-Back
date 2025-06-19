@@ -6,9 +6,11 @@ export interface IUser extends Document {
   password: string;
   category: string; // Ej: "8va"
   level: string; // Ej: "inicial", "medio", "fuerte"
-  hand: "derecha" | "izquierda";
-  position: "reves" | "drive";
+  hand: "Derecha" | "Izquierda";
+  position: "Reves" | "Drive";
   profileImage?: string;
+  createdAt: Date;
+  updatedAt: Date;
 }
 
 const userSchema = new Schema<IUser>(

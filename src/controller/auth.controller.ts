@@ -177,15 +177,27 @@ export const register = async (req: Request, res: Response): Promise<void> => {
       );
 
       // Enviar respuesta exitosa
+      console.log('URL de la imagen de perfil guardada:', newUser.profileImage);
+      
+      const userResponse = {
+        id: newUser._id,
+        username: newUser.username,
+        email: newUser.email,
+        category: newUser.category,
+        level: newUser.level,
+        hand: newUser.hand,
+        position: newUser.position,
+        profileImage: newUser.profileImage,
+        createdAt: newUser.createdAt,
+        updatedAt: newUser.updatedAt
+      };
+
+      console.log('Enviando respuesta con usuario:', userResponse);
+      
       res.status(201).json({
         success: true,
         message: "Usuario registrado correctamente",
-        user: {
-          id: newUser._id,
-          username: newUser.username,
-          email: newUser.email,
-          profileImage: newUser.profileImage,
-        },
+        user: userResponse,
         token,
       });
     } catch (dbError: any) {
