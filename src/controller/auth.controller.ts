@@ -12,6 +12,11 @@ interface MulterRequest extends Request {
   validationError?: string;
 }
 
+// Agregar esta interfaz cerca de las otras interfaces
+//export interface CloudinaryResult {
+//  secure_url: string;
+//}
+
 export const register = async (req: Request, res: Response): Promise<void> => {
   console.log("Iniciando proceso de registro...");
   console.log("Cuerpo de la solicitud:", req.body);
@@ -177,8 +182,8 @@ export const register = async (req: Request, res: Response): Promise<void> => {
       );
 
       // Enviar respuesta exitosa
-      console.log('URL de la imagen de perfil guardada:', newUser.profileImage);
-      
+      console.log("URL de la imagen de perfil guardada:", newUser.profileImage);
+
       const userResponse = {
         id: newUser._id,
         username: newUser.username,
@@ -189,11 +194,11 @@ export const register = async (req: Request, res: Response): Promise<void> => {
         position: newUser.position,
         profileImage: newUser.profileImage,
         createdAt: newUser.createdAt,
-        updatedAt: newUser.updatedAt
+        updatedAt: newUser.updatedAt,
       };
 
-      console.log('Enviando respuesta con usuario:', userResponse);
-      
+      console.log("Enviando respuesta con usuario:", userResponse);
+
       res.status(201).json({
         success: true,
         message: "Usuario registrado correctamente",
@@ -329,6 +334,75 @@ export const login = async (req: Request, res: Response): Promise<void> => {
     }
   }
 };
+
+export const updateProfile = async (
+  req: Request,
+  res: Response
+): Promise<void> => {
+  try {
+    const reqWithFile = req as MulterRequest;
+    const userId = (req as any).user?.id;
+    const updateData = { ...req.body };
+
+    console.log("Actualizando perfil para usuario:", userId);
+    console.log("Datos recibidos:", updateData);
+    console.log("Archivo recibido:", reqWithFile.file ? "Sí" : "No");
+
+    // Verificar si se proporcionó una nueva imagen
+    // Verificar si se proporcionó una nueva imagen
+    if (reqWithFile.file) {
+      console.log("Procesando nueva imagen de perfil...");
+      try {
+        const imageUrl = await uploadImageToCloudinary(reqWithFile.file);
+        updateData.profileImage = imageUrl;
+        console.log("Imagen subida a Cloudinary:", updateData.profileImage);
+      } catch (error) {
+        console.error("Error al subir la imagen:", error);
+        throw new Error("No se pudo subir la imagen de perfil");
+      }
+    }
+
+    // Actualizar el usuario en la base de datos
+    const updatedUser = await userModel.findByIdAndUpdate(
+      userId,
+      { $set: updateData },
+      { new: true, runValidators: true }
+    );
+
+    if (!updatedUser) {
+      res.status(404).json({
+        success: false,
+        message: "Usuario no encontrado",
+      });
+      return;
+    }
+
+    // Convertir a objeto plano para manipular
+    const userResponse = updatedUser.toObject();
+    // Usar la sintaxis segura para eliminar la propiedad
+    if ("password" in userResponse) {
+      const { password, ...userWithoutPassword } = userResponse;
+      res.status(200).json({
+        success: true,
+        message: "Perfil actualizado exitosamente",
+        user: userWithoutPassword,
+      });
+    } else {
+      res.status(200).json({
+        success: true,
+        message: "Perfil actualizado exitosamente",
+        user: userResponse,
+      });
+    }
+  } catch (error: any) {
+    console.error("Error al actualizar el perfil:", error);
+    res.status(500).json({
+      success: false,
+      message: error.message || "Error al actualizar el perfil",
+    });
+  }
+};
+
 export const testConnection = (req: Request, res: Response) => {
   console.log("✅ Prueba de conexión exitosa");
   res.status(200).json({

@@ -1,6 +1,13 @@
 import { Router } from "express";
 import multer from "multer";
-import { register, login, testConnection } from "../controller/auth.controller";
+import {
+  register,
+  login,
+  testConnection,
+  updateProfile,
+} from "../controller/auth.controller";
+import authMiddleware from "../middlewares/auth.middleware";
+// Asegúrate de tener este middleware configurado
 const storage = multer.memoryStorage();
 
 const fileFilter = (req: any, file: any, cb: any) => {
@@ -26,5 +33,11 @@ router.get("/test", testConnection);
 router.post("/register", upload.single("image"), register);
 // Ruta de login
 router.post("/login", login);
+router.put(
+  "/profile",
+  authMiddleware,
+  upload.single("profileImage"),
+  updateProfile
+);
 
 export default router;
