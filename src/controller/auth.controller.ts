@@ -343,10 +343,21 @@ export const updateProfile = async (
   res: Response
 ): Promise<void> => {
   try {
-    const reqWithFile = req as MulterRequest;
-    const userId = (req as any).user?.id;
-    const updateData = { ...req.body };
+    const reqWithFile = req as any; // Usamos any temporalmente
+    const userId = req.user?.id; // Accedemos al ID del usuario desde req.user
 
+    console.log("ID del usuario desde el token:", userId); // Log para depuración
+
+    if (!userId) {
+      console.error("No se pudo obtener el ID del usuario desde el token");
+      res.status(401).json({
+        success: false,
+        message: "No autorizado - Usuario no identificado",
+      });
+      return;
+    }
+
+    const updateData = { ...req.body };
     console.log("Actualizando perfil para usuario:", userId);
     console.log("Datos recibidos:", updateData);
     console.log("Archivo recibido:", reqWithFile.file ? "Sí" : "No");
@@ -372,8 +383,11 @@ export const updateProfile = async (
           updateData.profileImage
         );
       } catch (error) {
-        console.error("Error al actualizar la imagen de perfil:", error);
-        throw new Error("No se pudo actualizar la imagen de perfil");
+        console.error("Error en updateProfile:", error);
+        res.status(500).json({
+          success: false,
+          message: "Error al actualizar el perfil",
+        });
       }
     }
 

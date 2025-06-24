@@ -3,36 +3,54 @@ import { Request, Response, NextFunction } from "express";
 import jwt from "jsonwebtoken";
 import { JWT_SECRET } from "../config/env";
 
-export interface AuthRequest extends Request {
-  user?: any;
+// Definimos una interfaz para el payload del token
+interface JwtPayload {
+  id: string;
+  [key: string]: any;
 }
 
-const authMiddleware = (
-  req: AuthRequest,
+// Extendemos la interfaz Request de Express
+declare global {
+  namespace Express {
+    interface Request {
+      user?: {
+        id: string;
+      };
+    }
+  }
+}
+
+export const authMiddleware = (
+  req: Request,
   res: Response,
   next: NextFunction
-): void => {
+) => {
   try {
     const token = req.header("Authorization")?.replace("Bearer ", "");
 
     if (!token) {
-      res.status(401).json({
+      return res.status(401).json({
         success: false,
         message: "No autorizado - Token no proporcionado",
       });
-      return;
     }
 
-    const decoded = jwt.verify(token, JWT_SECRET);
-    req.user = decoded;
+    // Verificar el token
+    const decoded = jwt.verify(token, JWT_SECRET) as JwtPayload;
+
+    // Asignar el ID del usuario a req.user
+    req.user = {
+      id: decoded.id,
+    };
+
+    console.log("Usuario autenticado con ID:", req.user.id); // Log para depuración
+
     next();
   } catch (error) {
     console.error("Error en autenticación:", error);
-    res.status(401).json({
+    return res.status(401).json({
       success: false,
-      message: "No autorizado - Token inválido",
+      message: "No autorizado - Token inválido o expirado",
     });
   }
 };
-
-export default authMiddleware;
