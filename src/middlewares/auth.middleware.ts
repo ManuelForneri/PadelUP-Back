@@ -4,7 +4,10 @@ import jwt from "jsonwebtoken";
 import { JWT_SECRET } from "../config/env";
 
 interface JwtPayload {
-  id: string;
+  userId: string;  // Cambiado de 'id' a 'userId' para coincidir con el token
+  email: string;
+  iat: number;
+  exp: number;
   [key: string]: any;
 }
 
@@ -41,7 +44,7 @@ export const authMiddleware = (
 
     // Asignar el ID del usuario a req.user
     req.user = {
-      id: decoded.id,
+      id: decoded.userId,  // Usamos userId que es lo que está en el token
     };
 
     console.log("Usuario autenticado con ID:", req.user.id);

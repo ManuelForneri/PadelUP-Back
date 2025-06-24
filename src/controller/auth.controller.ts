@@ -257,7 +257,23 @@ export const login = async (req: Request, res: Response): Promise<void> => {
           { username: usernameOrEmail.toLowerCase() },
         ],
       })
-      .select("+password"); // Incluir la contraseña para la comparación
+      .select("+password") // Incluir la contraseña para la comparación
+      .lean()
+      .exec();
+
+    if (!user) {
+      console.error("Usuario no encontrado para:", usernameOrEmail);
+      res.status(401).json({
+        success: false,
+        message: "Credenciales inválidas",
+      });
+      return;
+    }
+
+    // Asegurarnos de que el usuario tenga un _id
+    if (!user._id) {
+      throw new Error("Usuario no tiene un ID válido");
+    }
 
     if (!user) {
       console.error("Usuario no encontrado para:", usernameOrEmail);
@@ -284,16 +300,27 @@ export const login = async (req: Request, res: Response): Promise<void> => {
 
     // Generar token JWT
     console.log("Generando token JWT...");
+    const userId = user._id.toString(); // Convertir a string explícitamente
     const token = jwt.sign(
-      { userId: user._id, email: user.email },
+      { 
+        userId: userId,
+        email: user.email,
+        username: user.username
+      },
       JWT_SECRET,
       { expiresIn: "30d" }
     );
+    
+    console.log("Token generado para el usuario:", userId);
 
     // Obtener datos del usuario sin la contraseña
     const userData = await userModel.findById(user._id).select("-password");
+    
+    if (!userData) {
+      throw new Error("Usuario no encontrado");
+    }
 
-    console.log("Inicio de sesión exitoso para:", user.username);
+    console.log("Inicio de sesión exitoso para:", userData.username);
 
     // Enviar respuesta exitosa
     res.status(200).json({
