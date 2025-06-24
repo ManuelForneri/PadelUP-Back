@@ -4,7 +4,10 @@ import jwt from "jsonwebtoken";
 import { Express } from "express";
 import userModel from "../models/user.model";
 import { JWT_SECRET } from "../config/env";
-import { uploadImageToCloudinary } from "../utils/cloudinary";
+import {
+  deleteImageFromCloudinary,
+  uploadImageToCloudinary,
+} from "../utils/cloudinary";
 
 // Extender la interfaz Request para incluir el archivo
 interface MulterRequest extends Request {
@@ -349,16 +352,28 @@ export const updateProfile = async (
     console.log("Archivo recibido:", reqWithFile.file ? "Sí" : "No");
 
     // Verificar si se proporcionó una nueva imagen
-    // Verificar si se proporcionó una nueva imagen
     if (reqWithFile.file) {
       console.log("Procesando nueva imagen de perfil...");
       try {
+        // Obtener el usuario actual para verificar si tiene una imagen previa
+        const currentUser = await userModel.findById(userId);
+
+        // Si el usuario ya tiene una imagen de perfil, eliminarla de Cloudinary
+        if (currentUser?.profileImage) {
+          console.log("Eliminando imagen anterior de Cloudinary...");
+          await deleteImageFromCloudinary(currentUser.profileImage);
+        }
+
+        // Subir la nueva imagen
         const imageUrl = await uploadImageToCloudinary(reqWithFile.file);
         updateData.profileImage = imageUrl;
-        console.log("Imagen subida a Cloudinary:", updateData.profileImage);
+        console.log(
+          "Nueva imagen subida a Cloudinary:",
+          updateData.profileImage
+        );
       } catch (error) {
-        console.error("Error al subir la imagen:", error);
-        throw new Error("No se pudo subir la imagen de perfil");
+        console.error("Error al actualizar la imagen de perfil:", error);
+        throw new Error("No se pudo actualizar la imagen de perfil");
       }
     }
 

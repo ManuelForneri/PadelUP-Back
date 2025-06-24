@@ -31,3 +31,20 @@ export const uploadImageToCloudinary = (
     readable.pipe(uploadStream);
   });
 };
+// Agrega esta función en cloudinary.ts
+export const deleteImageFromCloudinary = async (
+  imageUrl: string
+): Promise<void> => {
+  try {
+    // Extraer el public_id de la URL
+    const publicId = imageUrl.split("/").pop()?.split(".")[0];
+    if (!publicId) return;
+
+    // Eliminar la imagen
+    await cloudinary.uploader.destroy(`padelSAG_users/${publicId}`);
+    console.log("Imagen eliminada de Cloudinary:", publicId);
+  } catch (error) {
+    console.error("Error al eliminar la imagen de Cloudinary:", error);
+    // No lanzamos el error para no interrumpir el flujo principal
+  }
+};
