@@ -3,7 +3,6 @@ import { Request, Response, NextFunction } from "express";
 import jwt from "jsonwebtoken";
 import { JWT_SECRET } from "../config/env";
 
-// Definimos una interfaz para el payload del token
 interface JwtPayload {
   id: string;
   [key: string]: any;
