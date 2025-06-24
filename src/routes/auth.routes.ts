@@ -6,7 +6,8 @@ import {
   testConnection,
   updateProfile,
 } from "../controller/auth.controller";
-import authMiddleware from "../middlewares/auth.middleware";
+import { authMiddleware } from "../middlewares/auth.middleware";
+
 // Asegúrate de tener este middleware configurado
 const storage = multer.memoryStorage();
 

@@ -23,15 +23,17 @@ export const authMiddleware = (
   req: Request,
   res: Response,
   next: NextFunction
-) => {
+): void => {
+  // Añadimos el tipo de retorno explícito
   try {
     const token = req.header("Authorization")?.replace("Bearer ", "");
 
     if (!token) {
-      return res.status(401).json({
+      res.status(401).json({
         success: false,
         message: "No autorizado - Token no proporcionado",
       });
+      return; // Asegúrate de salir de la función después de enviar la respuesta
     }
 
     // Verificar el token
@@ -42,14 +44,14 @@ export const authMiddleware = (
       id: decoded.id,
     };
 
-    console.log("Usuario autenticado con ID:", req.user.id); // Log para depuración
-
-    next();
+    console.log("Usuario autenticado con ID:", req.user.id);
+    next(); // Continuar con el siguiente middleware
   } catch (error) {
     console.error("Error en autenticación:", error);
-    return res.status(401).json({
+    res.status(401).json({
       success: false,
       message: "No autorizado - Token inválido o expirado",
     });
+    return; // Asegúrate de salir de la función después de enviar la respuesta
   }
 };
