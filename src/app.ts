@@ -3,6 +3,7 @@ import dotenv from "dotenv";
 import cors from "cors";
 import { connectDB } from "./config/db";
 import authRoutes from "./routes/auth.routes";
+import playerRoutes from "./routes/player.routes";
 
 dotenv.config();
 const app = express();
@@ -113,6 +114,9 @@ app.get('/api/health', (req, res) => {
 
 // Rutas de autenticación
 app.use("/api/auth", authRoutes);
+
+// Rutas de jugadores
+app.use("/api/players", playerRoutes);
 
 // Ruta raíz
 app.get("/", (req, res) => {
