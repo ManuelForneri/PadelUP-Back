@@ -142,11 +142,26 @@ export const register = async (req: Request, res: Response): Promise<void> => {
           profileImageUrl
         );
       } catch (error: any) {
-        console.error("Error al subir la imagen a Cloudinary:", error);
+        console.error("Error al subir la imagen a Cloudinary:", {
+          message: error.message,
+          stack: error.stack,
+          code: error.code,
+          http_code: error.http_code,
+          name: error.name,
+        });
+
+        // Si el error es de Cloudinary, extraer más detalles
+        let errorMessage = "Error al procesar la imagen de perfil";
+        if (error.http_code) {
+          errorMessage = `Error de Cloudinary (${error.http_code}): ${error.message}`;
+        } else if (error.message) {
+          errorMessage = error.message;
+        }
+
         res.status(500).json({
           success: false,
-          message: "Error al procesar la imagen de perfil",
-          error: error.message,
+          message: errorMessage,
+          error: process.env.NODE_ENV === "development" ? error.message : "Error al procesar la imagen",
         });
         return;
       }
@@ -302,20 +317,20 @@ export const login = async (req: Request, res: Response): Promise<void> => {
     console.log("Generando token JWT...");
     const userId = user._id.toString(); // Convertir a string explícitamente
     const token = jwt.sign(
-      { 
+      {
         userId: userId,
         email: user.email,
-        username: user.username
+        username: user.username,
       },
       JWT_SECRET,
       { expiresIn: "30d" }
     );
-    
+
     console.log("Token generado para el usuario:", userId);
 
     // Obtener datos del usuario sin la contraseña
     const userData = await userModel.findById(user._id).select("-password");
-    
+
     if (!userData) {
       throw new Error("Usuario no encontrado");
     }
