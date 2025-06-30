@@ -75,7 +75,7 @@ router.get("/test", testConnection);
 
 // Aplicar multer solo a la ruta de registro
 router.post("/register", 
-  upload.single("image"),
+  upload.single("profileImage"),
   handleMulterError,
   register
 );
