@@ -8,6 +8,9 @@ import playerRoutes from "./routes/player.routes";
 dotenv.config();
 const app = express();
 
+// Aumentar el tiempo de espera de las solicitudes
+export const REQUEST_TIMEOUT = 30000; // 30 segundos
+
 // Configuración de CORS
 const corsOptions = {
   origin: (origin: string | undefined, callback: (err: Error | null, allow?: boolean) => void) => {
@@ -71,7 +74,7 @@ app.use(cors(corsOptions));
 
 // Configuración para manejar JSON
 app.use(express.json({ 
-  limit: '50mb',
+  limit: '10mb',
   verify: (req: any, res, buf) => {
     try {
       JSON.parse(buf.toString());
@@ -86,7 +89,7 @@ app.use(express.json({
 app.use(express.urlencoded({ 
   extended: true, 
   limit: '50mb',
-  parameterLimit: 50000,
+  parameterLimit: 100000,
   verify: (req: any, res, buf) => {
     req.rawBody = buf.toString();
   }

@@ -8,9 +8,7 @@ import {
 } from "../controller/auth.controller";
 import { authMiddleware } from "../middlewares/auth.middleware";
 
-// Asegúrate de tener este middleware configurado
-const storage = multer.memoryStorage();
-
+// Configuración del filtro de archivos
 const fileFilter = (req: any, file: any, cb: any) => {
   if (file.mimetype.startsWith("image/")) {
     cb(null, true);
@@ -20,14 +18,23 @@ const fileFilter = (req: any, file: any, cb: any) => {
 };
 
 console.log("Configurando middleware de carga de archivos...");
+
+// Configuración de almacenamiento en memoria
+const storage = multer.memoryStorage();
+
+// Configuración de límites
+const uploadLimits = {
+  fileSize: 10 * 1024 * 1024, // 10MB
+  files: 1, // Máximo 1 archivo
+  fields: 10, // Máximo 10 campos
+  headerPairs: 20, // Máximo 20 encabezados
+};
+
 const upload = multer({
-  storage: multer.memoryStorage(),
-  limits: {
-    fileSize: 10 * 1024 * 1024, // 10MB
-    fieldSize: 10 * 1024 * 1024, // 10MB
-    files: 1, // Máximo 1 archivo
-  },
+  storage,
+  limits: uploadLimits,
   fileFilter,
+  preservePath: true, // Mantener la ruta del archivo original
 });
 
 // Middleware para manejar errores de multer
