@@ -317,13 +317,13 @@ export const login = async (req: Request, res: Response): Promise<void> => {
       return;
     }
 
-    console.log("Usuario encontrado:", user.username);
+    console.log("Usuario encontrado con DNI:", user.dni);
 
     // Verificar contraseña
     console.log("Verificando contraseña...");
     const isMatch = await bcrypt.compare(password, user.password);
     if (!isMatch) {
-      console.error("Contraseña incorrecta para el usuario:", user.username);
+      console.error("Contraseña incorrecta para el usuario con DNI:", user.dni);
       res.status(401).json({
         success: false,
         message: "Credenciales inválidas",
@@ -338,7 +338,7 @@ export const login = async (req: Request, res: Response): Promise<void> => {
       {
         userId: userId,
         email: user.email,
-        username: user.username,
+        dni: user.dni,
       },
       JWT_SECRET,
       { expiresIn: "30d" }
@@ -353,7 +353,7 @@ export const login = async (req: Request, res: Response): Promise<void> => {
       throw new Error("Usuario no encontrado");
     }
 
-    console.log("Inicio de sesión exitoso para:", userData.username);
+    console.log("Inicio de sesión exitoso para:", userData.email);
 
     // Enviar respuesta exitosa
     res.status(200).json({
@@ -361,8 +361,11 @@ export const login = async (req: Request, res: Response): Promise<void> => {
       message: "Inicio de sesión exitoso",
       user: {
         id: user._id,
-        username: user.username,
+        dni: user.dni,
+        firstName: user.firstName,
+        lastName: user.lastName,
         email: user.email,
+        city: user.city,
         profileImage: user.profileImage,
         category: user.category,
         level: user.level,
