@@ -43,10 +43,13 @@ export const register = async (req: Request, res: Response): Promise<void> => {
     }
     // Extraer datos del cuerpo de la solicitud
     const {
+      dni,
       email,
-      username,
       password,
       repeatPassword,
+      firstName,
+      lastName,
+      city,
       category,
       level,
       hand,
@@ -56,8 +59,11 @@ export const register = async (req: Request, res: Response): Promise<void> => {
     const file = (req as MulterRequest).file; // Archivo subido a través de multer
 
     console.log("Datos del formulario recibidos:", {
+      dni,
       email,
-      username,
+      firstName,
+      lastName,
+      city,
       category,
       level,
       hand,
@@ -67,7 +73,10 @@ export const register = async (req: Request, res: Response): Promise<void> => {
     // Validaciones de campos obligatorios
     const requiredFields = [
       { field: email, name: "email" },
-      { field: username, name: "username" },
+      { field: dni, name: "dni" },
+      { field: firstName, name: "firstName" },
+      { field: lastName, name: "lastName" },
+      { field: city, name: "city" },
       { field: password, name: "password" },
       { field: repeatPassword, name: "repeatPassword" },
       { field: category, name: "category" },
@@ -121,12 +130,12 @@ export const register = async (req: Request, res: Response): Promise<void> => {
     }
 
     // Verificar si el nombre de usuario ya está en uso
-    const existingUsername = await userModel.findOne({ username });
+    const existingUsername = await userModel.findOne({ dni });
     if (existingUsername) {
-      console.error(`El nombre de usuario ${username} ya está en uso`);
+      console.error(`El usuario ${dni} ya existe`);
       res.status(409).json({
         success: false,
-        message: "El nombre de usuario ya está en uso",
+        message: "El usuario ya existe",
       });
       return;
     }
@@ -161,7 +170,10 @@ export const register = async (req: Request, res: Response): Promise<void> => {
         res.status(500).json({
           success: false,
           message: errorMessage,
-          error: process.env.NODE_ENV === "development" ? error.message : "Error al procesar la imagen",
+          error:
+            process.env.NODE_ENV === "development"
+              ? error.message
+              : "Error al procesar la imagen",
         });
         return;
       }
@@ -178,7 +190,10 @@ export const register = async (req: Request, res: Response): Promise<void> => {
       console.log("Creando nuevo usuario...");
       const newUser = new userModel({
         email,
-        username,
+        dni,
+        firstName,
+        lastName,
+        city,
         password: hashedPassword,
         category,
         level,
@@ -204,7 +219,10 @@ export const register = async (req: Request, res: Response): Promise<void> => {
 
       const userResponse = {
         id: newUser._id,
-        username: newUser.username,
+        dni: newUser.dni,
+        firstName: newUser.firstName,
+        lastName: newUser.lastName,
+        city: newUser.city,
         email: newUser.email,
         category: newUser.category,
         level: newUser.level,
