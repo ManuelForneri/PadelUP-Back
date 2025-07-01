@@ -26,8 +26,10 @@ const storage = multer.memoryStorage();
 const uploadLimits = {
   fileSize: 10 * 1024 * 1024, // 10MB
   files: 1, // Máximo 1 archivo
-  fields: 10, // Máximo 10 campos
+  fields: 20, // Aumentado a 20 campos para permitir todos los campos del formulario
   headerPairs: 20, // Máximo 20 encabezados
+  fieldNameSize: 100, // Tamaño máximo del nombre del campo
+  fieldSize: 100, // Tamaño máximo del valor del campo
 };
 
 const upload = multer({
