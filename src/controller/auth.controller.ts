@@ -130,8 +130,8 @@ export const register = async (req: Request, res: Response): Promise<void> => {
     }
 
     // Verificar si el nombre de usuario ya está en uso
-    const existingUsername = await userModel.findOne({ dni });
-    if (existingUsername) {
+    const existingDNI = await userModel.findOne({ dni });
+    if (existingDNI) {
       console.error(`El usuario ${dni} ya existe`);
       res.status(409).json({
         success: false,
@@ -264,12 +264,12 @@ export const login = async (req: Request, res: Response): Promise<void> => {
   console.log("Datos de inicio de sesión recibidos:", req.body);
 
   try {
-    const { usernameOrEmail, password } = req.body;
+    const { dniOrEmail, password } = req.body;
 
     // Validar datos de entrada
-    if (!usernameOrEmail || !password) {
+    if (!dniOrEmail || !password) {
       const missingFields = [];
-      if (!usernameOrEmail) missingFields.push("usernameOrEmail");
+      if (!dniOrEmail) missingFields.push("dniOrEmail");
       if (!password) missingFields.push("password");
 
       console.error("Faltan campos obligatorios:", missingFields);
@@ -286,8 +286,8 @@ export const login = async (req: Request, res: Response): Promise<void> => {
     const user = await userModel
       .findOne({
         $or: [
-          { email: usernameOrEmail.toLowerCase() },
-          { username: usernameOrEmail.toLowerCase() },
+          { email: dniOrEmail.toLowerCase() },
+          { dni: dniOrEmail.toLowerCase() },
         ],
       })
       .select("+password") // Incluir la contraseña para la comparación
@@ -295,7 +295,7 @@ export const login = async (req: Request, res: Response): Promise<void> => {
       .exec();
 
     if (!user) {
-      console.error("Usuario no encontrado para:", usernameOrEmail);
+      console.error("Usuario no encontrado para:", dniOrEmail);
       res.status(401).json({
         success: false,
         message: "Credenciales inválidas",
@@ -309,7 +309,7 @@ export const login = async (req: Request, res: Response): Promise<void> => {
     }
 
     if (!user) {
-      console.error("Usuario no encontrado para:", usernameOrEmail);
+      console.error("Usuario no encontrado para:", dniOrEmail);
       res.status(401).json({
         success: false,
         message: "Credenciales inválidas",
