@@ -42,7 +42,7 @@ const userSchema = new Schema<IUser>(
     },
     hand: { type: String, enum: ["Derecha", "Izquierda"], required: true },
     position: { type: String, enum: ["Reves", "Drive"], required: true },
-    profileImage: { type: String },
+    profileImage: { type: String, default: null },
   },
   { timestamps: true }
 );
