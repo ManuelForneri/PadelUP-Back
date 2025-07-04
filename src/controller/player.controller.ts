@@ -34,10 +34,11 @@ export const getPlayers = async (
       .find(filter, {
         password: 0, // Excluir la contraseña
         __v: 0, // Excluir versión de mongoose
-        createdAt: 0,
+        // createdAt ahora está incluido
         updatedAt: 0,
       })
-      .sort({ firstName: 1 }); // Ordenar por nombre de usuario
+      .sort({ firstName: 1 }) // Ordenar por nombre de usuario
+      .lean(); // Usar lean() para mejor rendimiento
 
     res.status(200).json({
       success: true,
@@ -69,9 +70,9 @@ export const getPlayerById = async (
     const player = await userModel.findById(id, {
       password: 0, // Excluir la contraseña
       __v: 0, // Excluir versión de mongoose
-      createdAt: 0,
+      // createdAt ahora está incluido
       updatedAt: 0,
-    });
+    }).lean(); // Usar lean() para mejor rendimiento
 
     if (!player) {
       res.status(404).json({
