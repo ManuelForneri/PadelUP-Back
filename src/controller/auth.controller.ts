@@ -46,7 +46,6 @@ export const register = async (req: Request, res: Response): Promise<void> => {
       dni,
       email,
       password,
-      repeatPassword,
       firstName,
       lastName,
       city,
@@ -78,7 +77,6 @@ export const register = async (req: Request, res: Response): Promise<void> => {
       { field: lastName, name: "lastName" },
       { field: city, name: "city" },
       { field: password, name: "password" },
-      { field: repeatPassword, name: "repeatPassword" },
       { field: category, name: "category" },
       { field: level, name: "level" },
       { field: hand, name: "hand" },
@@ -99,15 +97,7 @@ export const register = async (req: Request, res: Response): Promise<void> => {
       return;
     }
 
-    if (password !== repeatPassword) {
-      console.error("Las contraseñas no coinciden");
-      res.status(400).json({
-        success: false,
-        message: "Las contraseñas no coinciden",
-      });
-      return;
-    }
-
+    // La validación de coincidencia de contraseñas se hace en el cliente
     // Validar fortaleza de la contraseña
     if (password.length < 6) {
       console.error("La contraseña es demasiado corta");
