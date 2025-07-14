@@ -49,10 +49,8 @@ export const register = async (req: Request, res: Response): Promise<void> => {
       firstName,
       lastName,
       city,
+      gender,
       category,
-      level,
-      hand,
-      position,
     } = req.body;
 
     const file = (req as MulterRequest).file; // Archivo subido a través de multer
@@ -63,10 +61,8 @@ export const register = async (req: Request, res: Response): Promise<void> => {
       firstName,
       lastName,
       city,
+      gender,
       category,
-      level,
-      hand,
-      position,
     });
 
     // Validaciones de campos obligatorios
@@ -77,10 +73,8 @@ export const register = async (req: Request, res: Response): Promise<void> => {
       { field: lastName, name: "lastName" },
       { field: city, name: "city" },
       { field: password, name: "password" },
+      { field: gender, name: "gender" },
       { field: category, name: "category" },
-      { field: level, name: "level" },
-      { field: hand, name: "hand" },
-      { field: position, name: "position" },
     ];
 
     const missingFields = requiredFields
@@ -176,59 +170,55 @@ export const register = async (req: Request, res: Response): Promise<void> => {
       console.log("Encriptando contraseña...");
       const hashedPassword = await bcrypt.hash(password, 10);
 
-      // Crear usuario
-      console.log("Creando nuevo usuario...");
+      // Crear el nuevo usuario con la estructura actualizada
       const newUser = new userModel({
-        email,
         dni,
+        email,
+        password: hashedPassword,
         firstName,
         lastName,
         city,
-        password: hashedPassword,
+        gender,
         category,
-        level,
-        hand,
-        position,
-        profileImage: profileImageUrl || undefined, // Solo guarda la URL si existe
+        profileImage: profileImageUrl || null,
+        points: 0, // Inicializar puntos en 0
+        votes: {
+          upVotes: 0,
+          downVotes: 0,
+          totalVotes: 0,
+          voters: [],
+        },
       });
 
       // Guardar usuario en la base de datos
       console.log("Guardando usuario en la base de datos...");
-      await newUser.save();
+      const savedUser = await newUser.save();
       console.log("Usuario registrado exitosamente");
 
-      // Generar token JWT
+      // Crear token JWT
       const token = jwt.sign(
-        { userId: newUser._id, email: newUser.email },
+        { userId: savedUser._id, email: savedUser.email },
         JWT_SECRET,
-        { expiresIn: "30d" }
+        { expiresIn: "24h" }
       );
 
       // Enviar respuesta exitosa
-      console.log("URL de la imagen de perfil guardada:", newUser.profileImage);
-
-      const userResponse = {
-        id: newUser._id,
-        dni: newUser.dni,
-        firstName: newUser.firstName,
-        lastName: newUser.lastName,
-        city: newUser.city,
-        email: newUser.email,
-        category: newUser.category,
-        level: newUser.level,
-        hand: newUser.hand,
-        position: newUser.position,
-        profileImage: newUser.profileImage,
-        createdAt: newUser.createdAt,
-        updatedAt: newUser.updatedAt,
-      };
-
-      console.log("Enviando respuesta con usuario:", userResponse);
-
+      console.log("Usuario registrado exitosamente");
       res.status(201).json({
         success: true,
         message: "Usuario registrado correctamente",
-        user: userResponse,
+        user: {
+          id: savedUser._id,
+          email: savedUser.email,
+          firstName: savedUser.firstName,
+          lastName: savedUser.lastName,
+          city: savedUser.city,
+          gender: savedUser.gender,
+          category: savedUser.category,
+          profileImage: savedUser.profileImage,
+          points: savedUser.points,
+          votes: savedUser.votes
+        },
         token,
       });
     } catch (dbError: any) {
@@ -349,20 +339,19 @@ export const login = async (req: Request, res: Response): Promise<void> => {
     res.status(200).json({
       success: true,
       message: "Inicio de sesión exitoso",
+      token,
       user: {
         id: user._id,
-        dni: user.dni,
+        email: user.email,
         firstName: user.firstName,
         lastName: user.lastName,
-        email: user.email,
         city: user.city,
-        profileImage: user.profileImage,
+        gender: user.gender,
         category: user.category,
-        level: user.level,
-        hand: user.hand,
-        position: user.position,
+        profileImage: user.profileImage,
+        points: user.points,
+        votes: user.votes
       },
-      token,
     });
   } catch (error: any) {
     console.error("Error en el proceso de login:", error);
