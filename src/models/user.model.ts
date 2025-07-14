@@ -14,6 +14,7 @@ export interface IUser extends Document {
   profileImage?: string;
   createdAt: Date;
   updatedAt: Date;
+  playerPoint: number;
 }
 
 const userSchema = new Schema<IUser>(
@@ -43,6 +44,7 @@ const userSchema = new Schema<IUser>(
     hand: { type: String, enum: ["Derecha", "Izquierda"], required: true },
     position: { type: String, enum: ["Reves", "Drive"], required: true },
     profileImage: { type: String, default: null },
+    playerPoint: { type: Number, default: 0, required: false },
   },
   { timestamps: true }
 );
