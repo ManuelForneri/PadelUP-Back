@@ -51,6 +51,8 @@ export const register = async (req: Request, res: Response): Promise<void> => {
       city,
       gender,
       category,
+      hand,
+      position,
     } = req.body;
 
     const file = (req as MulterRequest).file; // Archivo subido a través de multer
@@ -75,6 +77,8 @@ export const register = async (req: Request, res: Response): Promise<void> => {
       { field: password, name: "password" },
       { field: gender, name: "gender" },
       { field: category, name: "category" },
+      { field: hand, name: "hand" },
+      { field: position, name: "position" },
     ];
 
     const missingFields = requiredFields
@@ -180,6 +184,8 @@ export const register = async (req: Request, res: Response): Promise<void> => {
         city,
         gender,
         category,
+        hand,
+        position,
         profileImage: profileImageUrl || null,
         points: 0, // Inicializar puntos en 0
         votes: {
@@ -215,6 +221,8 @@ export const register = async (req: Request, res: Response): Promise<void> => {
           city: savedUser.city,
           gender: savedUser.gender,
           category: savedUser.category,
+          hand: savedUser.hand,
+          position: savedUser.position,
           profileImage: savedUser.profileImage,
           points: savedUser.points,
           votes: savedUser.votes
@@ -348,6 +356,8 @@ export const login = async (req: Request, res: Response): Promise<void> => {
         city: user.city,
         gender: user.gender,
         category: user.category,
+        hand: user.hand,
+        position: user.position,
         profileImage: user.profileImage,
         points: user.points,
         votes: user.votes

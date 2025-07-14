@@ -16,6 +16,8 @@ export interface IUser extends Document {
   city: string;
   gender: 'masculino' | 'femenino' | 'otro';
   category: 'inicial' | 'medio' | 'fuerte';
+  hand: 'Derecha' | 'Izquierda';
+  position: 'Reves' | 'Drive' | 'Ambos';
   profileImage?: string;
   createdAt: Date;
   updatedAt: Date;
@@ -87,6 +89,22 @@ const userSchema = new Schema<IUser>(
     profileImage: { 
       type: String, 
       default: null 
+    },
+    hand: { 
+      type: String, 
+      required: [true, 'La mano hábil es obligatoria'],
+      enum: {
+        values: ['Derecha', 'Izquierda'],
+        message: 'Mano hábil no válida. Debe ser: Derecha o Izquierda'
+      }
+    },
+    position: { 
+      type: String, 
+      required: [true, 'La posición es obligatoria'],
+      enum: {
+        values: ['Reves', 'Drive', 'Ambos'],
+        message: 'Posición no válida. Debe ser: Reves, Drive o Ambos'
+      }
     },
     points: { 
       type: Number, 
