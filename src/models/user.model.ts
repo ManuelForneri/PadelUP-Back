@@ -15,7 +15,7 @@ export interface IUser extends Document {
   lastName: string;
   city: string;
   gender: 'masculino' | 'femenino' | 'otro';
-  category: 'inicial' | 'medio' | 'fuerte';
+  category: '8va' | '7ma' | '6ta' | '5ta' | '4ta' | '3ra' | '2da' | '1ra';
   hand: 'Derecha' | 'Izquierda';
   position: 'Reves' | 'Drive' | 'Ambos';
   profileImage?: string;
@@ -67,10 +67,10 @@ const userSchema = new Schema<IUser>(
       type: String, 
       required: [true, 'La categoría es obligatoria'],
       enum: {
-        values: ['inicial', 'medio', 'fuerte'],
-        message: 'Categoría no válida. Debe ser: inicial, medio o fuerte'
+        values: ['8va', '7ma', '6ta', '5ta', '4ta', '3ra', '2da', '1ra'],
+        message: 'Categoría no válida. Debe ser: 8va, 7ma, 6ta, 5ta, 4ta, 3ra, 2da o 1ra'
       },
-      default: 'inicial'
+      default: '8va'
     },
     city: {
       type: String,
