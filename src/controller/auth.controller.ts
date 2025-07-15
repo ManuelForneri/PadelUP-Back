@@ -184,6 +184,7 @@ export const register = async (req: Request, res: Response): Promise<void> => {
         city,
         gender,
         category,
+        nivel: req.body.nivel, // Agregar el nivel del usuario
         hand,
         position,
         profileImage: profileImageUrl || null,
@@ -356,6 +357,7 @@ export const login = async (req: Request, res: Response): Promise<void> => {
         city: user.city,
         gender: user.gender,
         category: user.category,
+        nivel: user.nivel, // Agregar el nivel del usuario
         hand: user.hand,
         position: user.position,
         profileImage: user.profileImage,
