@@ -4,7 +4,6 @@ import cors from "cors";
 import { connectDB } from "./config/db";
 import authRoutes from "./routes/auth.routes";
 import playerRoutes from "./routes/player.routes";
-import voteRoutes from "./routes/vote.routes";
 
 dotenv.config();
 const app = express();
@@ -128,9 +127,6 @@ app.use("/api/auth", authRoutes);
 
 // Rutas de jugadores
 app.use("/api/players", playerRoutes);
-
-// Rutas de votación
-app.use("/api/votes", voteRoutes);
 
 // Ruta raíz
 app.get("/", (req, res) => {

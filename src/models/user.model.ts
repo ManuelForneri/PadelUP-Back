@@ -1,12 +1,10 @@
 import { Schema, model, Document } from "mongoose";
 
-import { Types } from "mongoose";
-
 export interface IVote {
   upVotes: number;
   downVotes: number;
   totalVotes: number;
-  voters: Types.ObjectId[]; // Array de IDs de usuarios que ya votaron
+  voters: string[]; // Array de IDs de usuarios que ya votaron
 }
 
 export interface IUser extends Document {
