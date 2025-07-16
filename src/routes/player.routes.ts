@@ -1,6 +1,6 @@
 import { Router } from "express";
 import { authMiddleware } from "../middlewares/auth.middleware";
-import { getPlayers, getPlayerById } from "../controller/player.controller";
+import { getPlayers, getPlayerById, voteForPlayer } from "../controller/player.controller";
 
 const router = Router();
 
@@ -10,5 +10,8 @@ router.use(authMiddleware);
 router.get("/", getPlayers);
 
 router.get("/:id", getPlayerById);
+
+// Ruta para votar por un jugador
+router.post("/:id/vote", voteForPlayer);
 
 export default router;

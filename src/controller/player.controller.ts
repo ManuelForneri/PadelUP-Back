@@ -60,6 +60,101 @@ export const getPlayers = async (
  * @param req - Request de Express con el ID del jugador
  * @param res - Response de Express
  */
+/**
+ * Registra un voto para un jugador
+ * @param req - Request de Express con el ID del jugador y los datos del voto
+ * @param res - Response de Express
+ */
+export const voteForPlayer = async (
+  req: Request,
+  res: Response
+): Promise<void> => {
+  try {
+    const { id: playerId } = req.params;
+    const { voterId: voterIdParam, voteType }: { voterId: string; voteType: 'up' | 'down' } = req.body;
+
+    // Validar que se proporcionen los datos necesarios
+    if (!voterIdParam || !voteType) {
+      res.status(400).json({
+        success: false,
+        message: 'Se requieren voterId y voteType',
+      });
+      return;
+    }
+
+    // Verificar que el jugador que vota existe
+    const voter = await userModel.findById(voterIdParam);
+    if (!voter || !voter._id) {
+      res.status(404).json({
+        success: false,
+        message: 'Usuario votante no encontrado',
+      });
+      return;
+    }
+
+    // Verificar que el jugador objetivo existe
+    const player = await userModel.findById(playerId);
+    if (!player) {
+      res.status(404).json({
+        success: false,
+        message: 'Jugador no encontrado',
+      });
+      return;
+    }
+
+    // Verificar si el votante ya ha votado a este jugador
+    const voterId = voter._id.toString();
+    const hasVoted = player.votes.voters.some(voter => voter.toString() === voterId);
+    if (hasVoted) {
+      res.status(400).json({
+        success: false,
+        message: 'Ya has votado a este jugador',
+      });
+      return;
+    }
+
+    // Actualizar los votos
+    const update: any = {
+      $addToSet: { 'votes.voters': voter._id },
+      $inc: { 'votes.totalVotes': 1 }
+    };
+
+    if (voteType === 'up') {
+      update.$inc['votes.upVotes'] = 1;
+    } else {
+      update.$inc['votes.downVotes'] = 1;
+    }
+
+    // Actualizar el documento del jugador
+    const updatedPlayer = await userModel.findByIdAndUpdate(
+      playerId,
+      update,
+      { new: true, select: 'votes' }
+    );
+
+    if (!updatedPlayer) {
+      throw new Error('Error al actualizar los votos del jugador');
+    }
+
+    res.status(200).json({
+      success: true,
+      message: `Has votado que el jugador ${voteType === 'up' ? 'está bien' : 'está pasado'}`,
+      data: {
+        upVotes: updatedPlayer.votes.upVotes,
+        downVotes: updatedPlayer.votes.downVotes,
+        totalVotes: updatedPlayer.votes.totalVotes
+      }
+    });
+  } catch (error) {
+    console.error('Error al registrar el voto:', error);
+    res.status(500).json({
+      success: false,
+      message: 'Error al registrar el voto',
+      error: error instanceof Error ? error.message : 'Error desconocido',
+    });
+  }
+};
+
 export const getPlayerById = async (
   req: Request,
   res: Response
