@@ -1,6 +1,10 @@
 import { Router } from "express";
 import { authMiddleware } from "../middlewares/auth.middleware";
-import { getPlayers, getPlayerById, voteForPlayer } from "../controller/player.controller";
+import {
+  getPlayers,
+  getPlayerById,
+  voteForPlayer,
+} from "../controller/player.controller";
 
 const router = Router();
 

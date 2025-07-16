@@ -122,10 +122,20 @@ app.get("/api/health", (req, res) => {
   });
 });
 
+// Middleware temporal para deshabilitar autenticación
+console.log('⚠️  ADVERTENCIA: La autenticación está deshabilitada temporalmente para pruebas');
+
+// Middleware temporal para simular un usuario autenticado
+app.use((req, res, next) => {
+  // Simular un usuario autenticado para pruebas
+  req.user = { id: 'test-user-id' };
+  next();
+});
+
 // Rutas de autenticación
 app.use("/api/auth", authRoutes);
 
-// Rutas de jugadores
+// Rutas de jugadores (sin autenticación temporalmente)
 app.use("/api/players", playerRoutes);
 
 // Ruta raíz
