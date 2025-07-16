@@ -4,14 +4,17 @@ import { getPlayers, getPlayerById, voteForPlayer } from "../controller/player.c
 
 const router = Router();
 
-// Aplicar middleware de autenticación a todas las rutas de jugadores
-router.use(authMiddleware);
+// Rutas que requieren autenticación
+const authRouter = Router();
+authRouter.use(authMiddleware);
 
-router.get("/", getPlayers);
+authRouter.get("/", getPlayers);
+authRouter.get("/:id", getPlayerById);
 
-router.get("/:id", getPlayerById);
+// Usar las rutas con autenticación
+router.use(authRouter);
 
-// Ruta para votar por un jugador
+// Ruta para votar por un jugador (temporalmente sin autenticación)
 router.post("/:id/vote", voteForPlayer);
 
 export default router;
