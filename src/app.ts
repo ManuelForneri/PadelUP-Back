@@ -122,30 +122,10 @@ app.get("/api/health", (req, res) => {
   });
 });
 
-// Ruta de prueba temporal sin autenticación
-app.post('/api/test-vote', function(req, res) {
-  console.log('✅ Ruta de prueba accedida');
-  res.json({
-    success: true,
-    message: '✅ Ruta de prueba accesible sin autenticación',
-    timestamp: new Date().toISOString()
-  });
-});
-
-// Middleware temporal para deshabilitar autenticación
-console.log('⚠️  ADVERTENCIA: La autenticación está deshabilitada temporalmente para pruebas');
-
-// Middleware temporal para simular un usuario autenticado
-app.use((req, res, next) => {
-  // Simular un usuario autenticado para pruebas
-  req.user = { id: 'test-user-id' };
-  next();
-});
-
 // Rutas de autenticación
 app.use("/api/auth", authRoutes);
 
-// Rutas de jugadores (sin autenticación temporalmente)
+// Rutas de jugadores
 app.use("/api/players", playerRoutes);
 
 // Ruta raíz

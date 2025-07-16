@@ -1,24 +1,14 @@
 import { Router } from "express";
 import { authMiddleware } from "../middlewares/auth.middleware";
-import {
-  getPlayers,
-  getPlayerById,
-  voteForPlayer,
-} from "../controller/player.controller";
+import { getPlayers, getPlayerById } from "../controller/player.controller";
 
 const router = Router();
 
-// Rutas que requieren autenticación
-const authRouter = Router();
-authRouter.use(authMiddleware);
+// Aplicar middleware de autenticación a todas las rutas de jugadores
+router.use(authMiddleware);
 
-authRouter.get("/", getPlayers);
-authRouter.get("/:id", getPlayerById);
+router.get("/", getPlayers);
 
-// Usar las rutas con autenticación
-router.use(authRouter);
-
-// Ruta para votar por un jugador (temporalmente sin autenticación)
-router.post("/:id/vote", voteForPlayer);
+router.get("/:id", getPlayerById);
 
 export default router;
