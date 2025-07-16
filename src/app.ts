@@ -122,6 +122,16 @@ app.get("/api/health", (req, res) => {
   });
 });
 
+// Ruta de prueba temporal sin autenticación
+app.post('/api/test-vote', function(req, res) {
+  console.log('✅ Ruta de prueba accedida');
+  res.json({
+    success: true,
+    message: '✅ Ruta de prueba accesible sin autenticación',
+    timestamp: new Date().toISOString()
+  });
+});
+
 // Middleware temporal para deshabilitar autenticación
 console.log('⚠️  ADVERTENCIA: La autenticación está deshabilitada temporalmente para pruebas');
 
