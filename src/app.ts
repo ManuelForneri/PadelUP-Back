@@ -130,7 +130,7 @@ app.use("/api/auth", authRoutes);
 app.use("/api/players", playerRoutes);
 
 //ruta de votos
-app.use("/api/votes", voteRoutes);
+app.use("/api/vote", voteRoutes);
 
 // Ruta raíz
 app.get("/", (req, res) => {

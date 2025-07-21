@@ -132,9 +132,11 @@ const userSchema = new Schema<IUser>(
     timestamps: true,
     toJSON: {
       transform: function(doc, ret) {
-        delete ret.password;
-        delete ret.__v;
-        return ret;
+        // Usar type assertion para evitar el error de TypeScript
+        const retObj = ret as any;
+        delete retObj.password;
+        delete retObj.__v;
+        return retObj;
       }
     }
   }
