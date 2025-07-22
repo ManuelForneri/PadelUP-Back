@@ -135,7 +135,7 @@ app.use("/api/vote", voteRoutes);
 // Ruta raíz
 app.get("/", (req, res) => {
   res.json({
-    message: "Bienvenido a la API de PadelSAG",
+    message: "Bienvenido a la API de PadelUP",
     status: "en funcionamiento",
     timestamp: new Date().toISOString(),
     environment: process.env.NODE_ENV || "development",
