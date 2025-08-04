@@ -14,13 +14,20 @@ export const registerVoteController = async (req: Request, res: Response) => {
       });
     }
 
+    // Definir los tipos de voto permitidos
+    const validVoteTypes = ['upVotes', 'goodVotes'] as const;
+    type VoteType = typeof validVoteTypes[number];
+    
     // Verificar que el tipo de voto sea válido
-    if (voteType !== 'upVotes' && voteType !== 'downVotes') {
+    if (!validVoteTypes.includes(voteType as VoteType)) {
       return res.status(400).json({
         success: false,
-        message: "Tipo de voto no válido. Debe ser 'upVotes' o 'downVotes'"
+        message: "Tipo de voto no válido. Debe ser 'upVotes' (para jugadores que deberían estar en una categoría superior) o 'goodVotes' (para jugadores bien rankeados en su categoría actual)"
       });
     }
+    
+    // Asegurar que TypeScript sepa que voteType es un tipo seguro
+    const safeVoteType = voteType as VoteType;
 
     // Buscar al usuario que está siendo votado
     const userToVote = await userModel.findById(id);
@@ -39,12 +46,8 @@ export const registerVoteController = async (req: Request, res: Response) => {
       });
     }
 
-    // Actualizar los votos
-    if (voteType === 'upVotes') {
-      userToVote.votes.upVotes += 1;
-    } else {
-      userToVote.votes.downVotes += 1;
-    }
+    // Actualizar los votos según el tipo
+    userToVote.votes[safeVoteType] += 1;
     userToVote.votes.totalVotes += 1;
     userToVote.votes.voters.push(voterId);
 
@@ -56,7 +59,7 @@ export const registerVoteController = async (req: Request, res: Response) => {
       message: "Voto registrado exitosamente",
       data: {
         upVotes: userToVote.votes.upVotes,
-        downVotes: userToVote.votes.downVotes,
+        goodVotes: userToVote.votes.goodVotes,
         totalVotes: userToVote.votes.totalVotes
       }
     });

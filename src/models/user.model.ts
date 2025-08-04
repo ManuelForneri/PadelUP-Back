@@ -1,10 +1,10 @@
 import { Schema, model, Document } from "mongoose";
 
 export interface IVote {
-  upVotes: number;
-  downVotes: number;
-  totalVotes: number;
-  voters: string[]; // Array de IDs de usuarios que ya votaron
+  upVotes: number;      // Votos para jugadores que deberían estar en una categoría superior
+  goodVotes: number;    // Votos para jugadores que están bien rankeados en su categoría actual
+  totalVotes: number;   // Total de votos recibidos
+  voters: string[];     // Array de IDs de usuarios que ya votaron
 }
 
 export interface IUser extends Document {
@@ -123,7 +123,7 @@ const userSchema = new Schema<IUser>(
     },
     votes: {
       upVotes: { type: Number, default: 0, min: 0 },
-      downVotes: { type: Number, default: 0, min: 0 },
+      goodVotes: { type: Number, default: 0, min: 0 },
       totalVotes: { type: Number, default: 0, min: 0 },
       voters: [{ type: Schema.Types.ObjectId, ref: 'User' }]
     }
