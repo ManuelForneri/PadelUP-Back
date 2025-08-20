@@ -5,6 +5,7 @@ import { connectDB } from "./config/db";
 import authRoutes from "./routes/auth.routes";
 import playerRoutes from "./routes/player.routes";
 import voteRoutes from "./routes/vote.route";
+import tournamentRoutes from "./routes/tournament.routes";
 
 dotenv.config();
 const app = express();
@@ -129,8 +130,11 @@ app.use("/api/auth", authRoutes);
 // Rutas de jugadores
 app.use("/api/players", playerRoutes);
 
-//ruta de votos
+// Ruta de votos
 app.use("/api/vote", voteRoutes);
+
+// Rutas de torneos
+app.use("/api/tournaments", tournamentRoutes);
 
 // Ruta raíz
 app.get("/", (req, res) => {
