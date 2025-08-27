@@ -1,6 +1,7 @@
 import express from "express";
 import dotenv from "dotenv";
 import cors from "cors";
+import path from "path";
 import { connectDB } from "./config/db";
 import authRoutes from "./routes/auth.routes";
 import playerRoutes from "./routes/player.routes";
@@ -12,6 +13,16 @@ const app = express();
 
 // Aumentar el tiempo de espera de las solicitudes
 export const REQUEST_TIMEOUT = 30000; // 30 segundos
+
+// Crear directorio de subidas si no existe
+const uploadsDir = path.join(__dirname, '../public/uploads/tournaments');
+import fs from 'fs';
+if (!fs.existsSync(uploadsDir)) {
+  fs.mkdirSync(uploadsDir, { recursive: true });
+}
+
+// Servir archivos estáticos
+app.use('/uploads', express.static(path.join(__dirname, '../public/uploads')));
 
 // Configuración de CORS
 const corsOptions = {
@@ -127,13 +138,9 @@ app.get("/api/health", (req, res) => {
 // Rutas de autenticación
 app.use("/api/auth", authRoutes);
 
-// Rutas de jugadores
+// Rutas
 app.use("/api/players", playerRoutes);
-
-// Ruta de votos
-app.use("/api/vote", voteRoutes);
-
-// Rutas de torneos
+app.use("/api/votes", voteRoutes);
 app.use("/api/tournaments", tournamentRoutes);
 
 // Ruta raíz

@@ -1,54 +1,75 @@
 import { Request, Response, NextFunction } from 'express';
 import jwt from 'jsonwebtoken';
-import User, { IUser } from '../models/user.model';
-import { Document, Types } from 'mongoose';
+import User from '../models/user.model';
 
-export interface RequestWithUser extends Request {
-  user?: {
-    id: string;
-    role: string;
-  };
-}
+// The Request type is extended in src/@types/express/index.d.ts
 
-export const authenticateJWT = async (req: RequestWithUser, res: Response, next: NextFunction) => {
+export const isAuthenticated = async (req: Request, res: Response, next: NextFunction) => {
   try {
-    const authHeader = req.headers.authorization;
-    
-    if (!authHeader || !authHeader.startsWith('Bearer ')) {
-      return res.status(401).json({ message: 'No token provided' });
+    // Get token from header
+    const token = req.header('Authorization')?.replace('Bearer ', '');
+
+    if (!token) {
+      return res.status(401).json({
+        success: false,
+        message: 'No token, authorization denied',
+      });
     }
 
-    const token = authHeader.split(' ')[1];
-    const decoded = jwt.verify(token, process.env.JWT_SECRET || 'your-secret-key') as { userId: string };
+    // Verify token
+    const decoded = jwt.verify(token, process.env.JWT_SECRET || 'your_jwt_secret') as any;
     
-    const user = await User.findById(decoded.userId).select('-password').lean().exec();
+    // Add user from payload
+    const user = await User.findById(decoded.id).select('-password').lean();
     
     if (!user) {
-      return res.status(401).json({ message: 'User not found' });
+      return res.status(401).json({
+        success: false,
+        message: 'Token is not valid',
+      });
     }
 
-    // Type assertion for the user document
-    const userDoc = user as unknown as IUser & { _id: { toString: () => string } };
-    
-    // For now, we'll use 'admin' role for users with '1ra' category
-    // You might want to add a proper role field to the User model later
-    const userRole = userDoc.category === '1ra' ? 'admin' : 'user';
-    
+    // Add user to request with proper typing
+    const userObj = user as any;
     req.user = {
-      id: userDoc._id.toString(),
-      role: userRole
+      id: userObj._id ? userObj._id.toString() : '',
+      role: userObj.role || 'user',
+      ...userObj
     };
-
+    delete (req.user as any).password; // Ensure password is not included
     next();
-  } catch (error) {
-    console.error('Authentication error:', error);
-    return res.status(401).json({ message: 'Invalid or expired token' });
+  } catch (err) {
+    console.error('Error in authentication middleware:', err);
+    return res.status(401).json({
+      success: false,
+      message: 'Token is not valid',
+    });
   }
 };
 
-export const isAdmin = (req: RequestWithUser, res: Response, next: NextFunction) => {
-  if (req.user?.role !== 'admin') {
-    return res.status(403).json({ message: 'Admin access required' });
+export const isAdmin = (req: Request, res: Response, next: NextFunction) => {
+  try {
+    if (!req.user) {
+      return res.status(401).json({
+        success: false,
+        message: 'No user found in request',
+      });
+    }
+
+    // Check if user has admin role
+    if (req.user?.role !== 'admin') {
+      return res.status(403).json({
+        success: false,
+        message: 'Access denied. Admin role required.',
+      });
+    }
+
+    next();
+  } catch (err) {
+    console.error('Error in admin middleware:', err);
+    return res.status(500).json({
+      success: false,
+      message: 'Server error',
+    });
   }
-  next();
 };

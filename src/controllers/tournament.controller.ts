@@ -1,111 +1,29 @@
-import { Request, Response } from 'express';
-import { Types } from 'mongoose';
-import { Tournament } from '../models/tournament.model';
-import { RequestWithUser } from '../middleware/auth.middleware';
+import { Request, Response } from "express";
+import { validationResult } from "express-validator/check";
+import { ValidationError } from "express-validator/check";
+import Tournament, { ITournament } from "../models/tournament.model";
+import { Types } from "mongoose";
 
-// Types for request bodies
-export interface CreateTournamentBody {
-  name: string;
-  category: string;
-  isMixed: boolean;
-  location: string;
-  startDate: string;
-  endDate: string;
-  registrationDeadline: string;
-  posterUrl?: string;
-  registrationFee: number;
-  description?: string;
-  maxPlayers?: number;
-}
+// The Request type is extended in src/@types/express/index.d.ts
 
-export interface UpdateTournamentBody extends Partial<CreateTournamentBody> {}
-
-export interface TournamentParams extends Record<string, string> {
-  id: string;
-}
-
-// Get all tournaments with optional filtering
-export const getTournaments = async (req: Request, res: Response) => {
+export const createTournament = async (req: Request, res: Response) => {
   try {
-    const { status, limit = '10', page = '1', active, upcoming } = req.query;
-    const query: any = { isActive: active === 'false' ? false : true };
-    
-    if (status) {
-      query.status = status;
-    }
-    
-    if (upcoming === 'true') {
-      query.startDate = { $gte: new Date() };
-    }
-    
-    const limitNum = parseInt(limit as string, 10);
-    const pageNum = Math.max(1, parseInt(page as string, 10));
-    const skip = (pageNum - 1) * limitNum;
-    
-    const [tournaments, total] = await Promise.all([
-      Tournament.find(query)
-        .sort({ startDate: 1 })
-        .skip(skip)
-        .limit(limitNum)
-        .lean()
-        .exec(),
-      Tournament.countDocuments(query).exec()
-    ]);
-    
-    res.status(200).json({ 
-      success: true, 
-      data: tournaments,
-      pagination: {
-        total,
-        page: pageNum,
-        pages: Math.ceil(total / limitNum),
-        limit: limitNum
-      }
-    });
-  } catch (error) {
-    res.status(500).json({ 
-      success: false, 
-      message: 'Error fetching tournaments' 
-    });
-  }
-};
+    // Validate request
+    const errors = validationResult(req);
+    if (!errors.isEmpty()) {
+      const errorArray = errors.array() as ValidationError[];
+      const formattedErrors = errorArray.map((err) => ({
+        param: err.param || "unknown",
+        msg: err.msg,
+        location: err.location || "body",
+      }));
 
-// Get tournament by ID
-export const getTournamentById = async (
-  req: Request<TournamentParams>,
-  res: Response
-) => {
-  try {
-    const tournament = await Tournament.findOne({ 
-      _id: req.params.id,
-      isActive: true 
-    }).lean().exec();
-    
-    if (!tournament) {
-      return res.status(404).json({ 
-        success: false, 
-        message: 'Tournament not found' 
+      return res.status(400).json({
+        success: false,
+        errors: formattedErrors,
       });
     }
-    
-    res.status(200).json({ 
-      success: true, 
-      data: tournament 
-    });
-  } catch (error) {
-    res.status(500).json({ 
-      success: false, 
-      message: 'Error fetching tournament' 
-    });
-  }
-};
 
-// Create a new tournament
-export const createTournament = async (
-  req: Request<{}, {}, CreateTournamentBody> & { user?: { id: string } },
-  res: Response
-) => {
-  try {
     const {
       name,
       category,
@@ -114,140 +32,169 @@ export const createTournament = async (
       startDate,
       endDate,
       registrationDeadline,
-      posterUrl,
       registrationFee,
-      description = '',
-      maxPlayers
     } = req.body;
 
-    // Check if tournament with same name already exists
-    const existingTournament = await Tournament.findOne({ name }).lean().exec();
-    if (existingTournament) {
-      return res.status(400).json({
-        success: false,
-        message: 'A tournament with this name already exists'
-      });
-    }
+    // Check if image was uploaded
+    const imageUrl = req.file
+      ? `/uploads/tournaments/${req.file.filename}`
+      : undefined;
 
-    const newTournament = new Tournament({
+    // Ensure dates are properly formatted
+    const startDateObj = new Date(startDate);
+    const endDateObj = new Date(endDate);
+    const registrationDeadlineObj = new Date(registrationDeadline);
+
+    // Create new tournament
+    const tournament = new Tournament({
       name,
       category,
       isMixed,
       location,
-      startDate: new Date(startDate),
-      endDate: new Date(endDate),
-      registrationDeadline: new Date(registrationDeadline),
-      posterUrl,
-      registrationFee: Number(registrationFee),
-      description,
-      maxPlayers: maxPlayers ? Number(maxPlayers) : undefined,
-      createdBy: req.user?.id ? new Types.ObjectId(req.user.id) : undefined,
-      status: 'upcoming',
-      isActive: true
+      startDate: startDateObj,
+      endDate: endDateObj,
+      registrationDeadline: registrationDeadlineObj,
+      registrationFee,
+      imageUrl,
     });
 
-    await newTournament.save();
-    
+    await tournament.save();
+
     res.status(201).json({
       success: true,
-      data: newTournament.toObject()
+      data: tournament,
     });
   } catch (error) {
-    if (error instanceof Error) {
-      res.status(400).json({ 
-        success: false, 
-        message: error.message 
-      });
-    } else {
-      res.status(500).json({ 
-        success: false, 
-        message: 'An unknown error occurred' 
-      });
-    }
+    console.error("Error creating tournament:", error);
+    const errorMessage =
+      error instanceof Error ? error.message : "Unknown error occurred";
+    res.status(500).json({
+      success: false,
+      message: "Error al crear el torneo",
+      error: errorMessage,
+    });
   }
 };
 
-// Update a tournament
-export const updateTournament = async (
-  req: Request<TournamentParams, {}, UpdateTournamentBody> & { user?: { id: string } },
-  res: Response
-) => {
+export const getTournaments = async (req: Request, res: Response) => {
+  try {
+    const { activeOnly = "true" } = req.query;
+    const filter: any = {};
+
+    if (activeOnly === "true") {
+      filter.isActive = true;
+      filter.startDate = { $gte: new Date() };
+    }
+
+    const tournaments = await Tournament.find(filter)
+      .sort({ startDate: 1 })
+      .lean();
+
+    res.status(200).json({
+      success: true,
+      count: tournaments.length,
+      data: tournaments,
+    });
+  } catch (error) {
+    console.error("Error fetching tournaments:", error);
+    const errorMessage =
+      error instanceof Error ? error.message : "Unknown error occurred";
+    res.status(500).json({
+      success: false,
+      message: "Error al obtener los torneos",
+      error: errorMessage,
+    });
+  }
+};
+
+export const getTournamentById = async (req: Request, res: Response) => {
+  try {
+    const tournament = await Tournament.findById(req.params.id).lean();
+
+    if (!tournament) {
+      return res.status(404).json({
+        success: false,
+        message: "Torneo no encontrado",
+      });
+    }
+
+    res.status(200).json({
+      success: true,
+      data: tournament,
+    });
+  } catch (error) {
+    console.error("Error fetching tournament:", error);
+    const errorMessage =
+      error instanceof Error ? error.message : "Unknown error occurred";
+    res.status(500).json({
+      success: false,
+      message: "Error al obtener el torneo",
+      error: errorMessage,
+    });
+  }
+};
+
+export const updateTournament = async (req: Request, res: Response) => {
   try {
     const updates = { ...req.body };
-    
-    // Convert date strings to Date objects if they exist
-    if (updates.startDate) updates.startDate = new Date(updates.startDate) as any;
-    if (updates.endDate) updates.endDate = new Date(updates.endDate) as any;
-    if (updates.registrationDeadline) {
-      updates.registrationDeadline = new Date(updates.registrationDeadline) as any;
+
+    // Handle file upload if exists
+    if (req.file) {
+      updates.imageUrl = `/uploads/tournaments/${req.file.filename}`;
     }
-    
-    const tournament = await Tournament.findOneAndUpdate(
-      { 
-        _id: req.params.id,
-        isActive: true 
-      },
-      { $set: updates },
+
+    const tournament = await Tournament.findByIdAndUpdate(
+      req.params.id,
+      updates,
       { new: true, runValidators: true }
     );
-    
+
     if (!tournament) {
-      return res.status(404).json({ 
-        success: false, 
-        message: 'Tournament not found or already deleted' 
+      return res.status(404).json({
+        success: false,
+        message: "Torneo no encontrado",
       });
     }
-    
-    res.status(200).json({ 
-      success: true, 
-      data: tournament.toObject() 
+
+    res.status(200).json({
+      success: true,
+      data: tournament,
     });
   } catch (error) {
-    if (error instanceof Error) {
-      res.status(400).json({ 
-        success: false, 
-        message: error.message 
-      });
-    } else {
-      res.status(500).json({ 
-        success: false, 
-        message: 'Error updating tournament' 
-      });
-    }
+    console.error("Error updating tournament:", error);
+    const errorMessage =
+      error instanceof Error ? error.message : "Unknown error occurred";
+    res.status(500).json({
+      success: false,
+      message: "Error al actualizar el torneo",
+      error: errorMessage,
+    });
   }
 };
 
-// Delete a tournament (soft delete)
-export const deleteTournament = async (
-  req: Request<TournamentParams>,
-  res: Response
-) => {
+export const deleteTournament = async (req: Request, res: Response) => {
   try {
-    const tournament = await Tournament.findOneAndUpdate(
-      { 
-        _id: req.params.id,
-        isActive: true 
-      },
-      { $set: { isActive: false } },
-      { new: true }
-    );
-    
+    const tournament = await Tournament.findByIdAndDelete(req.params.id);
+
     if (!tournament) {
-      return res.status(404).json({ 
-        success: false, 
-        message: 'Tournament not found or already deleted' 
+      return res.status(404).json({
+        success: false,
+        message: "Torneo no encontrado",
       });
     }
-    
-    res.status(200).json({ 
-      success: true, 
-      message: 'Tournament deleted successfully',
-      data: tournament.toObject()
+
+    res.status(200).json({
+      success: true,
+      message: "Torneo eliminado correctamente",
     });
   } catch (error) {
-    res.status(500).json({ 
-      success: false, 
-      message: 'Error deleting tournament' 
+    console.error("Error deleting tournament:", error);
+    const errorMessage =
+      error instanceof Error ? error.message : "Unknown error occurred";
+    res.status(500).json({
+      success: false,
+      message: "Error al eliminar el torneo",
+      error: errorMessage,
     });
   }
 };

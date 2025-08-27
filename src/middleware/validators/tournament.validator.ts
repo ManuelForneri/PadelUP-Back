@@ -1,229 +1,171 @@
-import { check, ValidationChain, param } from "express-validator/check";
-import { Request, Response, NextFunction } from "express";
-import { isValidObjectId } from "mongoose";
+import { check, body, param } from 'express-validator/check';
+import { Request, Response, NextFunction } from 'express';
 
-// Helper function to validate dates
-const isFutureDate = (value: string) => {
-  const date = new Date(value);
-  return date > new Date();
-};
-
-// Type for the request with body
-interface TournamentRequest extends Request {
-  body: {
-    name: string;
-    category: "Principiante" | "Intermedio" | "Avanzado" | "Profesional";
-    isMixed: boolean;
-    location: string;
-    startDate: string;
-    endDate: string;
-    registrationDeadline: string;
-    posterUrl?: string;
-    registrationFee: number;
-  };
-}
-
-// Validate and sanitize input data for creating a tournament
-export const validateCreateTournament: ValidationChain[] = [
-  check("name")
+export const validateCreateTournament = [
+  body('name')
     .trim()
     .notEmpty()
-    .withMessage("El nombre del torneo es requerido")
-    .isLength({ min: 3, max: 100 })
-    .withMessage("El nombre debe tener entre 3 y 100 caracteres"),
+    .withMessage('El nombre del torneo es requerido')
+    .isLength({ min: 5, max: 100 })
+    .withMessage('El nombre debe tener entre 5 y 100 caracteres'),
 
-  check("category")
-    .isIn(["Principiante", "Intermedio", "Avanzado", "Profesional"] as const)
-    .withMessage("Categoría no válida"),
-
-  check("isMixed")
-    .isBoolean()
-    .withMessage("El campo isMixed debe ser un valor booleano"),
-
-  check("location")
+  body('category')
     .trim()
     .notEmpty()
-    .withMessage("La ubicación es requerida")
-    .isLength({ max: 200 })
-    .withMessage("La ubicación no puede tener más de 200 caracteres"),
+    .withMessage('La categoría es requerida')
+    .isLength({ min: 2, max: 50 })
+    .withMessage('La categoría debe tener entre 2 y 50 caracteres'),
 
-  check("startDate")
-    .isISO8601()
-    .withMessage("Fecha de inicio inválida")
-    .custom((value: string) => {
-      if (new Date(value) <= new Date()) {
-        throw new Error("La fecha de inicio debe ser futura");
-      }
-      return true;
-    }),
-
-  check("endDate")
-    .isISO8601()
-    .withMessage("Fecha de finalización inválida")
-    .custom((value: string, { req }) => {
-      const startDate = (req as TournamentRequest).body.startDate;
-      if (new Date(value) <= new Date(startDate)) {
-        throw new Error(
-          "La fecha de finalización debe ser posterior a la fecha de inicio"
-        );
-      }
-      return true;
-    }),
-
-  check("registrationDeadline")
-    .isISO8601()
-    .withMessage("Fecha límite de registro inválida")
-    .custom((value: string, { req }) => {
-      const startDate = (req as TournamentRequest).body.startDate;
-      if (new Date(value) >= new Date(startDate)) {
-        throw new Error(
-          "La fecha límite de registro debe ser anterior a la fecha de inicio"
-        );
-      }
-      return true;
-    }),
-
-  check("posterUrl")
-    .optional({ nullable: true })
-    .isURL()
-    .withMessage("La URL del póster no es válida"),
-
-  check("registrationFee")
-    .isNumeric()
-    .withMessage("La cuota de inscripción debe ser un número")
-    .isFloat({ min: 0 })
-    .withMessage("La cuota de inscripción no puede ser negativa"),
-];
-
-// Validate and sanitize input data for updating a tournament
-export const validateUpdateTournament: (
-  | ValidationChain
-  | ((req: Request, res: Response, next: NextFunction) => void)
-)[] = [
-  check("id").isMongoId().withMessage("ID de torneo no válido"),
-
-  check("name")
-    .optional()
-    .trim()
-    .isLength({ min: 3, max: 100 })
-    .withMessage("El nombre debe tener entre 3 y 100 caracteres"),
-
-  check("category")
-    .optional()
-    .isIn(["Principiante", "Intermedio", "Avanzado", "Profesional"] as const)
-    .withMessage("Categoría no válida"),
-
-  check("isMixed")
-    .optional()
+  body('isMixed')
     .isBoolean()
-    .withMessage("El campo isMixed debe ser un valor booleano"),
+    .withMessage('Debe especificar si el torneo es mixto o no'),
 
-  check("location")
-    .optional()
+  body('location')
     .trim()
-    .isLength({ max: 200 })
-    .withMessage("La ubicación no puede tener más de 200 caracteres"),
+    .notEmpty()
+    .withMessage('La sede del torneo es requerida')
+    .isLength({ min: 5, max: 200 })
+    .withMessage('La sede debe tener entre 5 y 200 caracteres'),
 
-  check("startDate")
-    .optional()
+  body('startDate')
+    .notEmpty()
+    .withMessage('La fecha de inicio es requerida')
     .isISO8601()
-    .withMessage("Fecha de inicio inválida"),
+    .withMessage('Formato de fecha inválido')
+    .custom((value: string, { req }) => {
+      const startDate = new Date(value);
+      const today = new Date();
+      today.setHours(0, 0, 0, 0);
+      
+      if (startDate < today) {
+        throw new Error('La fecha de inicio no puede ser en el pasado');
+      }
+      
+      return true;
+    }),
 
-  check("endDate")
-    .optional()
+  body('endDate')
+    .notEmpty()
+    .withMessage('La fecha de fin es requerida')
     .isISO8601()
-    .withMessage("Fecha de finalización inválida"),
+    .withMessage('Formato de fecha inválido')
+    .custom((value: string, { req }) => {
+      if (!req.body.startDate) return true;
+      
+      const startDate = new Date(req.body.startDate);
+      const endDate = new Date(value);
+      
+      if (endDate <= startDate) {
+        throw new Error('La fecha de fin debe ser posterior a la fecha de inicio');
+      }
+      
+      return true;
+    }),
 
-  check("registrationDeadline")
-    .optional()
+  body('registrationDeadline')
+    .notEmpty()
+    .withMessage('La fecha límite de inscripción es requerida')
     .isISO8601()
-    .withMessage("Fecha límite de registro inválida"),
+    .withMessage('Formato de fecha inválido')
+    .custom((value: string, { req }) => {
+      if (!req.body.startDate) return true;
+      
+      const registrationDeadline = new Date(value);
+      const startDate = new Date(req.body.startDate);
+      
+      if (registrationDeadline >= startDate) {
+        throw new Error('La fecha límite de inscripción debe ser anterior a la fecha de inicio');
+      }
+      
+      return true;
+    }),
 
-  check("posterUrl")
-    .optional()
-    .isURL()
-    .withMessage("La URL del póster no es válida"),
-
-  check("registrationFee")
-    .optional()
+  body('registrationFee')
+    .notEmpty()
+    .withMessage('El valor de la inscripción es requerido')
     .isNumeric()
-    .withMessage("La cuota de inscripción debe ser un número")
+    .withMessage('El valor de la inscripción debe ser un número')
     .isFloat({ min: 0 })
-    .withMessage("La cuota de inscripción no puede ser negativa"),
-
-  // Custom validator to check date consistency
-  (req: Request, res: any, next: NextFunction) => {
-    const { startDate, endDate, registrationDeadline } = req.body as {
-      startDate?: string;
-      endDate?: string;
-      registrationDeadline?: string;
-    };
-
-    const errors: { msg: string }[] = [];
-
-    if (startDate && endDate && new Date(startDate) >= new Date(endDate)) {
-      errors.push({
-        msg: "La fecha de inicio debe ser anterior a la fecha de finalización",
-      });
-    }
-
-    if (
-      startDate &&
-      registrationDeadline &&
-      new Date(registrationDeadline) >= new Date(startDate)
-    ) {
-      errors.push({
-        msg: "La fecha límite de registro debe ser anterior a la fecha de inicio",
-      });
-    }
-
-    if (errors.length > 0) {
-      return res.status(400).json({ errors });
-    }
-
-    next();
-  },
+    .withMessage('El valor de la inscripción no puede ser negativo'),
 ];
 
-// Validate tournament ID
 export const validateTournamentId = [
   param('id')
-    .custom((value) => {
-      if (!isValidObjectId(value)) {
-        throw new Error('ID de torneo no válido');
-      }
-      return true;
-    })
-    .withMessage('ID de torneo no válido')
+    .isMongoId()
+    .withMessage('ID de torneo inválido'),
 ];
 
-// Validate tournament dates consistency
-export const validateTournamentDates = (
-  req: Request,
-  res: Response,
-  next: NextFunction
-) => {
-  const { startDate, endDate, registrationDeadline } = req.body;
-  const errors: { msg: string }[] = [];
+export const validateUpdateTournament = [
+  param('id')
+    .isMongoId()
+    .withMessage('ID de torneo inválido'),
+  
+  body('name')
+    .optional()
+    .trim()
+    .isLength({ min: 5, max: 100 })
+    .withMessage('El nombre debe tener entre 5 y 100 caracteres'),
 
-  if (startDate && endDate && new Date(startDate) >= new Date(endDate)) {
-    errors.push({
-      msg: 'La fecha de inicio debe ser anterior a la fecha de finalización',
+  body('category')
+    .optional()
+    .trim()
+    .isLength({ min: 2, max: 50 })
+    .withMessage('La categoría debe tener entre 2 y 50 caracteres'),
+
+  body('isMixed')
+    .optional()
+    .isBoolean()
+    .withMessage('Debe ser un valor booleano'),
+
+  body('location')
+    .optional()
+    .trim()
+    .isLength({ min: 5, max: 200 })
+    .withMessage('La sede debe tener entre 5 y 200 caracteres'),
+
+  body('startDate')
+    .optional()
+    .isISO8601()
+    .withMessage('Formato de fecha inválido'),
+
+  body('endDate')
+    .optional()
+    .isISO8601()
+    .withMessage('Formato de fecha inválido'),
+
+  body('registrationDeadline')
+    .optional()
+    .isISO8601()
+    .withMessage('Formato de fecha inválido'),
+
+  body('registrationFee')
+    .optional()
+    .isNumeric()
+    .withMessage('El valor de la inscripción debe ser un número')
+    .isFloat({ min: 0 })
+    .withMessage('El valor de la inscripción no puede ser negativo'),
+];
+
+export const validateImageUpload = (req: Request, res: Response, next: NextFunction) => {
+  if (!req.file) {
+    return next();
+  }
+
+  const allowedTypes = ['image/jpeg', 'image/png', 'image/jpg'];
+  const maxSize = 5 * 1024 * 1024; // 5MB
+
+  if (!allowedTypes.includes(req.file.mimetype)) {
+    return res.status(400).json({
+      success: false,
+      message: 'Tipo de archivo no permitido. Solo se permiten imágenes JPG, JPEG o PNG',
     });
   }
 
-  if (
-    startDate &&
-    registrationDeadline &&
-    new Date(registrationDeadline) >= new Date(startDate)
-  ) {
-    errors.push({
-      msg: 'La fecha límite de registro debe ser anterior a la fecha de inicio',
+  if (req.file.size > maxSize) {
+    return res.status(400).json({
+      success: false,
+      message: 'La imagen es demasiado grande. El tamaño máximo permitido es 5MB',
     });
-  }
-
-  if (errors.length > 0) {
-    return res.status(400).json({ errors });
   }
 
   next();
