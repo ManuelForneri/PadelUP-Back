@@ -56,3 +56,6 @@ export const isAuthenticated = async (req: Request, res: Response, next: NextFun
     return; // Asegúrate de salir de la función después de enviar la respuesta
   }
 };
+
+// Exportar authMiddleware como alias de isAuthenticated para mantener compatibilidad
+export const authMiddleware = isAuthenticated;
