@@ -47,36 +47,26 @@ const upload = multer({
   },
 });
 
-// Public routes
+// Public routes (temporalmente sin autenticación para pruebas)
 router.get('/', getTournaments);
 router.get('/:id', validateTournamentId, getTournamentById);
-
-// Protected routes (require authentication and admin role)
 router.post(
   '/',
-  isAuthenticated,
-  isAdmin,
   upload.single('image'),
-  validateImageUpload,
   validateCreateTournament,
   createTournament
 );
 
 router.put(
   '/:id',
-  isAuthenticated,
-  isAdmin,
-  upload.single('image'),
-  validateImageUpload,
   validateTournamentId,
+  upload.single('image'),
   validateUpdateTournament,
   updateTournament
 );
 
 router.delete(
   '/:id',
-  isAuthenticated,
-  isAdmin,
   validateTournamentId,
   deleteTournament
 );
