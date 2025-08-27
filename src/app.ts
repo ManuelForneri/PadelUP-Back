@@ -15,14 +15,14 @@ const app = express();
 export const REQUEST_TIMEOUT = 30000; // 30 segundos
 
 // Crear directorio de subidas si no existe
-const uploadsDir = path.join(__dirname, '../public/uploads/tournaments');
-import fs from 'fs';
+const uploadsDir = path.join(__dirname, "../public/uploads/tournaments");
+import fs from "fs";
 if (!fs.existsSync(uploadsDir)) {
   fs.mkdirSync(uploadsDir, { recursive: true });
 }
 
 // Servir archivos estáticos
-app.use('/uploads', express.static(path.join(__dirname, '../public/uploads')));
+app.use("/uploads", express.static(path.join(__dirname, "../public/uploads")));
 
 // Configuración de CORS
 const corsOptions = {
@@ -40,7 +40,7 @@ const corsOptions = {
     const allowedOrigins = [
       "http://localhost:8081", // URL de Expo Web
       "http://localhost:19000", // URL de Expo
-      "http://localhost:3000", // React dev server
+      "http://localhost:5173/", // React dev server
       "http://localhost:5000", // Backend
       /^http:\/\/192\.168\.\d{1,3}\.\d{1,3}:\d+$/, // Cualquier IP local
       /^http:\/\/10\.\d{1,3}\.\d{1,3}\.\d{1,3}:\d+$/, // IPs privadas
