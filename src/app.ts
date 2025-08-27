@@ -32,7 +32,7 @@ const corsOptions = {
   ) => {
     // Permitir solicitudes sin origen (como aplicaciones móviles o Postman)
     if (!origin) {
-      console.log("✅ Solicitud sin origen (aplicación móvil)");
+      console.log("✅ Solicitud sin origen (aplicación móvil o Postman)");
       return callback(null, true);
     }
 
@@ -40,12 +40,16 @@ const corsOptions = {
     const allowedOrigins = [
       "http://localhost:8081", // URL de Expo Web
       "http://localhost:19000", // URL de Expo
-      "http://localhost:5173/", // React dev server
+      "http://localhost:5173", // React dev server (sin barra al final)
       "http://localhost:5000", // Backend
       /^http:\/\/192\.168\.\d{1,3}\.\d{1,3}:\d+$/, // Cualquier IP local
       /^http:\/\/10\.\d{1,3}\.\d{1,3}\.\d{1,3}:\d+$/, // IPs privadas
       /^http:\/\/172\.(1[6-9]|2[0-9]|3[0-1])\.\d{1,3}\.\d{1,3}:\d+$/, // Más IPs privadas
       /^https?:\/\/([a-z0-9]+[.])*padel-sag\.com$/, // Dominio de producción
+      /^https?:\/\/padelsag-back\.onrender\.com$/, // Backend en Render
+      /^https?:\/\/padelsag-web\.onrender\.com$/, // Frontend en Render
+      /^https?:\/\/padelsag\.onrender\.com$/, // Dominio alternativo en Render
+      /^https?:\/\/padelup\-frontend\.onrender\.com$/ // Frontend alternativo
     ];
 
     // Verificar si el origen está permitido
@@ -60,10 +64,10 @@ const corsOptions = {
 
     if (isAllowed) {
       console.log(`✅ Origen permitido: ${origin}`);
-      return callback(null, true);
+      callback(null, true);
     } else {
       console.log(`❌ Origen no permitido: ${origin}`);
-      return callback(new Error("Not allowed by CORS"));
+      callback(new Error("No permitido por CORS"));
     }
   },
   methods: ["GET", "POST", "PUT", "DELETE", "PATCH", "OPTIONS", "HEAD"],
@@ -72,20 +76,76 @@ const corsOptions = {
     "Authorization",
     "X-Requested-With",
     "Accept",
-    "Accept-Encoding",
-    "Content-Length",
     "Origin",
-    "X-Requested-With",
-    "X-Access-Token",
+    "Access-Control-Allow-Origin",
+    "Access-Control-Allow-Headers",
+    "Access-Control-Request-Method",
+    "Access-Control-Request-Headers"
   ],
-  exposedHeaders: ["Content-Length", "X-Foo", "X-Bar"],
+  exposedHeaders: [
+    "Content-Range", 
+    "X-Total-Count",
+    "Access-Control-Allow-Origin",
+    "Access-Control-Allow-Credentials"
+  ],
   credentials: true,
-  maxAge: 86400, // 24 horas
-  preflightContinue: false,
-  optionsSuccessStatus: 204,
+  optionsSuccessStatus: 200,
+  preflightContinue: false
 };
 
-// Middlewares
+// Middleware para manejar CORS manualmente
+app.use((req, res, next) => {
+  // Lista de orígenes permitidos
+  const allowedOrigins = [
+    'http://localhost:8081',
+    'http://localhost:19000',
+    'http://localhost:5173',
+    'http://localhost:5000',
+    /^http:\/\/192\.168\.\d{1,3}\.\d{1,3}:\d+$/,
+    /^http:\/\/10\.\d{1,3}\.\d{1,3}\.\d{1,3}:\d+$/,
+    /^http:\/\/172\.(1[6-9]|2[0-9]|3[0-1])\.\d{1,3}\.\d{1,3}:\d+$/,
+    /^https?:\/\/([a-z0-9]+\.)*padel-sag\.com$/,
+    /^https?:\/\/padelsag-back\.onrender\.com$/,
+    /^https?:\/\/padelsag-web\.onrender\.com$/,
+    /^https?:\/\/padelsag\.onrender\.com$/,
+    /^https?:\/\/padelup\-frontend\.onrender\.com$/
+  ];
+
+  const origin = req.headers.origin || '';
+  let isAllowed = !origin; // Permitir solicitudes sin origen
+
+  // Verificar si el origen está en la lista de permitidos
+  if (origin) {
+    isAllowed = allowedOrigins.some(allowedOrigin => {
+      if (typeof allowedOrigin === 'string') {
+        return origin === allowedOrigin;
+      } else if (allowedOrigin instanceof RegExp) {
+        return allowedOrigin.test(origin);
+      }
+      return false;
+    });
+  }
+
+  // Configurar encabezados CORS
+  if (isAllowed) {
+    res.header('Access-Control-Allow-Origin', origin);
+    res.header('Access-Control-Allow-Methods', 'GET, POST, PUT, DELETE, PATCH, OPTIONS');
+    res.header('Access-Control-Allow-Headers', 'Content-Type, Authorization, X-Requested-With');
+    res.header('Access-Control-Allow-Credentials', 'true');
+    console.log(`✅ Origen permitido: ${origin || 'Sin origen'}`);
+  } else {
+    console.log(`❌ Origen no permitido: ${origin}`);
+  }
+
+  // Responder inmediatamente a las solicitudes OPTIONS
+  if (req.method === 'OPTIONS') {
+    return res.status(200).end();
+  }
+
+  next();
+});
+
+// Usar el middleware de CORS estándar también
 app.use(cors(corsOptions));
 
 // Configuración para manejar JSON
