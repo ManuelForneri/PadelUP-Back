@@ -1,7 +1,6 @@
 import { Router } from 'express';
-import { celebrate } from 'celebrate';
 import multer from 'multer';
-import path from 'path';
+import { configureCloudinary } from '../config/cloudinary';
 import {
   createTournament,
   getTournaments,
@@ -13,30 +12,18 @@ import {
   validateCreateTournament,
   validateTournamentId,
   validateUpdateTournament,
-  validateImageUpload,
 } from '../middleware/validators/tournament.validator';
-import { isAuthenticated, isAdmin } from '../middleware/auth.middleware';
 
 const router = Router();
 
-// Configure multer for file uploads
-const storage = multer.diskStorage({
-  destination: (req, file, cb) => {
-    cb(null, 'public/uploads/tournaments/');
-  },
-  filename: (req, file, cb) => {
-    const uniqueSuffix = Date.now() + '-' + Math.round(Math.random() * 1e9);
-    const ext = path.extname(file.originalname);
-    cb(null, 'tournament-' + uniqueSuffix + ext);
-  },
-});
-
+// Configura Cloudinary
+const cloudinaryConfig = configureCloudinary();
 const upload = multer({ 
-  storage,
+  storage: cloudinaryConfig.storage,
   limits: { fileSize: 5 * 1024 * 1024 }, // 5MB limit
   fileFilter: (req, file, cb) => {
     const filetypes = /jpeg|jpg|png/;
-    const extname = filetypes.test(path.extname(file.originalname).toLowerCase());
+    const extname = filetypes.test(file.originalname.toLowerCase().match(/\.[0-9a-z]+$/)?.[0] || '');
     const mimetype = filetypes.test(file.mimetype);
     
     if (mimetype && extname) {

@@ -35,10 +35,8 @@ export const createTournament = async (req: Request, res: Response) => {
       registrationFee,
     } = req.body;
 
-    // Check if image was uploaded
-    const imageUrl = req.file
-      ? `/uploads/tournaments/${req.file.filename}`
-      : undefined;
+    // Get image URL from Cloudinary
+    const imageUrl = req.file?.path; // Cloudinary devuelve la URL en req.file.path
 
     // Ensure dates are properly formatted
     const startDateObj = new Date(startDate);
