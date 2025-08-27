@@ -4,29 +4,27 @@ import jwt from "jsonwebtoken";
 import { JWT_SECRET } from "../config/env";
 
 interface JwtPayload {
-  userId: string;  // Cambiado de 'id' a 'userId' para coincidir con el token
+  userId: string;
   email: string;
   iat: number;
   exp: number;
   [key: string]: any;
 }
 
-// Extendemos la interfaz Request de Express
+// Extend the Express Request type
 declare global {
   namespace Express {
     interface Request {
       user?: {
         id: string;
+        role: string;
+        [key: string]: any;
       };
     }
   }
 }
 
-export const authMiddleware = (
-  req: Request,
-  res: Response,
-  next: NextFunction
-): void => {
+export const isAuthenticated = async (req: Request, res: Response, next: NextFunction) => {
   // Añadimos el tipo de retorno explícito
   try {
     const token = req.header("Authorization")?.replace("Bearer ", "");

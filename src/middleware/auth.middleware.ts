@@ -47,6 +47,9 @@ export const isAuthenticated = async (req: Request, res: Response, next: NextFun
   }
 };
 
+// For backward compatibility
+export const authMiddleware = isAuthenticated;
+
 export const isAdmin = (req: Request, res: Response, next: NextFunction) => {
   try {
     if (!req.user) {

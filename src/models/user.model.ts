@@ -7,6 +7,8 @@ export interface IVote {
   voters: string[];     // Array de IDs de usuarios que ya votaron
 }
 
+export type UserRole = 'user' | 'admin';
+
 export interface IUser extends Document {
   dni: string;
   email: string;
@@ -20,6 +22,7 @@ export interface IUser extends Document {
   hand: 'Derecha' | 'Izquierda';
   position: 'Reves' | 'Drive' | 'Ambos';
   profileImage?: string;
+  role: UserRole;
   createdAt: Date;
   updatedAt: Date;
   points: number;
@@ -28,6 +31,11 @@ export interface IUser extends Document {
 
 const userSchema = new Schema<IUser>(
   {
+    role: {
+      type: String,
+      enum: ['user', 'admin'],
+      default: 'user',
+    },
     dni: { 
       type: String, 
       required: [true, 'El DNI es obligatorio'], 
