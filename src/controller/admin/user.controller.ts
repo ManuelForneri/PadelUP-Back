@@ -115,6 +115,54 @@ export const updateUser = async (req: Request, res: Response) => {
 };
 
 // Delete user (admin only)
+// Update user role (admin only)
+export const updateUserRole = async (req: Request, res: Response) => {
+  try {
+    const { id } = req.params;
+    const { role } = req.body;
+
+    if (!['admin', 'user'].includes(role)) {
+      return res.status(400).json({
+        success: false,
+        message: 'Rol no válido. Debe ser "admin" o "user"'
+      });
+    }
+
+    // Prevent self-demotion
+    if (req.user?.id === id && role !== 'admin') {
+      return res.status(400).json({
+        success: false,
+        message: 'No puedes quitarte a ti mismo el rol de administrador'
+      });
+    }
+
+    const user = await User.findByIdAndUpdate(
+      id,
+      { role },
+      { new: true, select: '-password -__v -votes' }
+    );
+
+    if (!user) {
+      return res.status(404).json({
+        success: false,
+        message: 'Usuario no encontrado'
+      });
+    }
+
+    res.json({
+      success: true,
+      message: `Rol de usuario actualizado a ${role}`,
+      data: user
+    });
+  } catch (error) {
+    console.error('Error updating user role:', error);
+    res.status(500).json({
+      success: false,
+      message: 'Error al actualizar el rol del usuario'
+    });
+  }
+};
+
 export const deleteUser = async (req: Request, res: Response) => {
   try {
     const { id } = req.params;

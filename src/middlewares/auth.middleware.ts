@@ -6,6 +6,7 @@ import { JWT_SECRET } from "../config/env";
 interface JwtPayload {
   userId: string;
   email: string;
+  role?: string;
   iat: number;
   exp: number;
   [key: string]: any;
@@ -20,6 +21,7 @@ declare global {
         role: string;
         [key: string]: any;
       };
+      token?: string;
     }
   }
 }
@@ -37,13 +39,17 @@ export const isAuthenticated = async (req: Request, res: Response, next: NextFun
       return; // Asegúrate de salir de la función después de enviar la respuesta
     }
 
-    // Verificar el token
+    // Verify the token
     const decoded = jwt.verify(token, JWT_SECRET) as JwtPayload;
 
-    // Asignar el ID del usuario a req.user
+    // Assign user data to req.user
     req.user = {
-      id: decoded.userId,  // Usamos userId que es lo que está en el token
+      id: decoded.userId,
+      role: decoded.role || 'user' // Default to 'user' if role is not in token
     };
+    
+    // Add token to request for potential use in subsequent handlers
+    req.token = token;
 
     console.log("Usuario autenticado con ID:", req.user.id);
     next(); // Continuar con el siguiente middleware

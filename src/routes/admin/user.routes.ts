@@ -6,6 +6,7 @@ import {
   getUser,
   updateUser,
   deleteUser,
+  updateUserRole,
 } from "../../controller/admin/user.controller";
 
 const router = Router();
@@ -17,6 +18,7 @@ router.use(isAuthenticated, adminMiddleware);
 router.get("/", getUsers);
 router.get("/:id", getUser);
 router.patch("/:id", updateUser);
+router.patch("/:id/role", updateUserRole);
 router.delete("/:id", deleteUser);
 
 export default router;
