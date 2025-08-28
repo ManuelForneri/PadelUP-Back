@@ -1,67 +1,78 @@
-// src/middlewares/auth.middleware.ts
-import { Request, Response, NextFunction } from "express";
-import jwt from "jsonwebtoken";
-import { JWT_SECRET } from "../config/env";
+import { Request, Response, NextFunction } from 'express';
+import jwt from 'jsonwebtoken';
+import User from '../models/user.model';
 
-interface JwtPayload {
-  userId: string;
-  email: string;
-  role?: string;
-  iat: number;
-  exp: number;
-  [key: string]: any;
-}
-
-// Extend the Express Request type
-declare global {
-  namespace Express {
-    interface Request {
-      user?: {
-        id: string;
-        role: string;
-        [key: string]: any;
-      };
-      token?: string;
-    }
-  }
-}
+// The Request type is extended in src/@types/express/index.d.ts
 
 export const isAuthenticated = async (req: Request, res: Response, next: NextFunction) => {
-  // Añadimos el tipo de retorno explícito
   try {
-    const token = req.header("Authorization")?.replace("Bearer ", "");
+    // Get token from header
+    const token = req.header('Authorization')?.replace('Bearer ', '');
 
     if (!token) {
-      res.status(401).json({
+      return res.status(401).json({
         success: false,
-        message: "No autorizado - Token no proporcionado",
+        message: 'No token, authorization denied',
       });
-      return; // Asegúrate de salir de la función después de enviar la respuesta
     }
 
-    // Verify the token
-    const decoded = jwt.verify(token, JWT_SECRET) as JwtPayload;
-
-    // Assign user data to req.user
-    req.user = {
-      id: decoded.userId,
-      role: decoded.role || 'user' // Default to 'user' if role is not in token
-    };
+    // Verify token
+    const decoded = jwt.verify(token, process.env.JWT_SECRET || 'your_jwt_secret') as any;
     
-    // Add token to request for potential use in subsequent handlers
-    req.token = token;
+    // Add user from payload
+    const user = await User.findById(decoded.id).select('-password').lean();
+    
+    if (!user) {
+      return res.status(401).json({
+        success: false,
+        message: 'Token is not valid',
+      });
+    }
 
-    console.log("Usuario autenticado con ID:", req.user.id);
-    next(); // Continuar con el siguiente middleware
-  } catch (error) {
-    console.error("Error en autenticación:", error);
-    res.status(401).json({
+    // Add user to request with proper typing
+    const userObj = user as any;
+    req.user = {
+      id: userObj._id ? userObj._id.toString() : '',
+      role: userObj.role || 'user',
+      ...userObj
+    };
+    delete (req.user as any).password; // Ensure password is not included
+    next();
+  } catch (err) {
+    console.error('Error in authentication middleware:', err);
+    return res.status(401).json({
       success: false,
-      message: "No autorizado - Token inválido o expirado",
+      message: 'Token is not valid',
     });
-    return; // Asegúrate de salir de la función después de enviar la respuesta
   }
 };
 
-// Exportar authMiddleware como alias de isAuthenticated para mantener compatibilidad
+// For backward compatibility
 export const authMiddleware = isAuthenticated;
+
+export const isAdmin = (req: Request, res: Response, next: NextFunction) => {
+  try {
+    if (!req.user) {
+      return res.status(401).json({
+        success: false,
+        message: 'No user found in request',
+      });
+    }
+
+    // Check if user has admin role
+    if (req.user?.role !== 'admin') {
+      return res.status(403).json({
+        success: false,
+        message: 'Access denied. Admin role required.',
+      });
+    }
+
+    next();
+  } catch (err) {
+    console.error('Error in admin middleware:', err);
+    return res.status(500).json({
+      success: false,
+      message: 'Server error',
+    });
+  }
+};

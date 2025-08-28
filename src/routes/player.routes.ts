@@ -1,7 +1,7 @@
 import { Router } from "express";
 import { authMiddleware } from "../middlewares/auth.middleware";
-import { getPlayers, getPlayerById } from "../controller/player.controller";
-import { getRanking } from "../controller/ranking.controller";
+import { getPlayers, getPlayerById } from "../controllers/player.controller";
+import { getRanking } from "../controllers/ranking.controller";
 
 const router = Router();
 

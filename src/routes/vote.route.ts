@@ -1,5 +1,10 @@
-import { Router, type Request, type Response, type NextFunction } from "express";
-import { registerVoteController } from "../controller/vote.controller";
+import {
+  Router,
+  type Request,
+  type Response,
+  type NextFunction,
+} from "express";
+import { registerVoteController } from "../controllers/vote.controller";
 
 export const voteRouter = Router();
 

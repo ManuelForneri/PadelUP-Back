@@ -5,7 +5,7 @@ import {
   login,
   testConnection,
   updateProfile,
-} from "../controller/auth.controller";
+} from "../controllers/auth.controller";
 import { authMiddleware } from "../middlewares/auth.middleware";
 
 // Configuración del filtro de archivos
@@ -48,24 +48,24 @@ const handleMulterError = (err: any, req: any, res: any, next: any) => {
       field: err.field,
       name: err.name,
     });
-    
-    if (err.code === 'LIMIT_FILE_SIZE') {
+
+    if (err.code === "LIMIT_FILE_SIZE") {
       return res.status(413).json({
         success: false,
-        message: 'El archivo es demasiado grande. Tamaño máximo: 10MB',
+        message: "El archivo es demasiado grande. Tamaño máximo: 10MB",
       });
     }
-    
-    if (err.code === 'LIMIT_UNEXPECTED_FILE') {
+
+    if (err.code === "LIMIT_UNEXPECTED_FILE") {
       return res.status(400).json({
         success: false,
-        message: 'Demasiados archivos. Solo se permite 1 archivo',
+        message: "Demasiados archivos. Solo se permite 1 archivo",
       });
     }
-    
+
     return res.status(400).json({
       success: false,
-      message: 'Error al procesar el archivo',
+      message: "Error al procesar el archivo",
       error: err.message,
     });
   }
@@ -76,7 +76,8 @@ const router = Router();
 router.get("/test", testConnection);
 
 // Aplicar multer solo a la ruta de registro
-router.post("/register", 
+router.post(
+  "/register",
   upload.single("profileImage"),
   handleMulterError,
   register
