@@ -344,27 +344,37 @@ export const login = async (req: Request, res: Response): Promise<void> => {
 
     console.log("Inicio de sesión exitoso para:", userData.email);
 
-    // Enviar respuesta exitosa
-    res.status(200).json({
+    // Preparar la respuesta
+    const responseData = {
       success: true,
       message: "Inicio de sesión exitoso",
-      token,
+      token: token, // Asegurarse de incluir el token
       user: {
-        id: user._id,
-        email: user.email,
-        firstName: user.firstName,
-        lastName: user.lastName,
-        city: user.city,
-        gender: user.gender,
-        category: user.category,
-        nivel: user.nivel, // Agregar el nivel del usuario
-        hand: user.hand,
-        position: user.position,
-        profileImage: user.profileImage,
-        points: user.points,
-        votes: user.votes
-      },
+        id: userData._id,
+        email: userData.email,
+        firstName: userData.firstName,
+        lastName: userData.lastName,
+        dni: userData.dni,
+        city: userData.city,
+        gender: userData.gender,
+        category: userData.category,
+        nivel: userData.nivel,
+        hand: userData.hand,
+        position: userData.position,
+        profileImage: userData.profileImage,
+        points: userData.points,
+        votes: userData.votes
+      }
+    };
+
+    console.log('Enviando respuesta de login:', {
+      ...responseData,
+      token: '***', // No mostrar el token real en los logs
+      user: { ...responseData.user, id: userData._id }
     });
+
+    // Enviar respuesta exitosa
+    res.status(200).json(responseData);
   } catch (error: any) {
     console.error("Error en el proceso de login:", error);
 
