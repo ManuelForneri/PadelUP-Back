@@ -19,8 +19,13 @@ export const isAuthenticated = async (req: Request, res: Response, next: NextFun
     // Verify token
     const decoded = jwt.verify(token, process.env.JWT_SECRET || 'your_jwt_secret') as any;
     
-    // Add user from payload
-    const user = await User.findById(decoded.id).select('-password').lean();
+    // Add user from payload - check both id and userId for compatibility
+    const userId = decoded.id || decoded.userId;
+    if (!userId) {
+      throw new Error('No user ID found in token');
+    }
+    
+    const user = await User.findById(userId).select('-password').lean();
     
     if (!user) {
       return res.status(401).json({
