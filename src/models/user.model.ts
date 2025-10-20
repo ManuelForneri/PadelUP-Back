@@ -132,6 +132,7 @@ const userSchema = new Schema<IUser>(
     },
     votes: {
       goodVotes: { type: Number, default: 0, min: 0 },
+      passVotes: { type: Number, default: 0, min: 0 },
       totalVotes: { type: Number, default: 0, min: 0 },
       voters: [{ type: Schema.Types.ObjectId, ref: "User" }],
     },
