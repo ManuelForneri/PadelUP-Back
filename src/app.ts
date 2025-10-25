@@ -9,6 +9,7 @@ import voteRoutes from "./routes/vote.route";
 import tournamentRoutes from "./routes/tournament.routes";
 import adminUserRoutes from "./routes/admin/user.routes";
 import adminAuthRoutes from "./routes/admin/auth.routes";
+import adminPlayerRoutes from "./routes/admin/player.routes";
 
 dotenv.config();
 const app = express();
@@ -208,6 +209,7 @@ app.use("/api/tournaments", tournamentRoutes);
 // Admin Routes
 app.use("/api/admin/auth", adminAuthRoutes);
 app.use("/api/admin/users", adminUserRoutes);
+app.use("/api/admin/players", adminPlayerRoutes);
 
 // Ruta raíz
 app.get("/", (req, res) => {
