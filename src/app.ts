@@ -52,7 +52,7 @@ const corsOptions = {
       /^https?:\/\/padelsag-back\.onrender\.com$/, // Backend en Render
       /^https?:\/\/padelsag-web\.onrender\.com$/, // Frontend en Render
       /^https?:\/\/padelsag\.onrender\.com$/, // Dominio alternativo en Render
-      /^https?:\/\/padelup\-frontend\.onrender\.com$/ // Frontend alternativo
+      /^https?:\/\/padelup\-frontend\.onrender\.com$/, // Frontend alternativo
     ];
 
     // Verificar si el origen está permitido
@@ -83,27 +83,27 @@ const corsOptions = {
     "Access-Control-Allow-Origin",
     "Access-Control-Allow-Headers",
     "Access-Control-Request-Method",
-    "Access-Control-Request-Headers"
+    "Access-Control-Request-Headers",
   ],
   exposedHeaders: [
-    "Content-Range", 
+    "Content-Range",
     "X-Total-Count",
     "Access-Control-Allow-Origin",
-    "Access-Control-Allow-Credentials"
+    "Access-Control-Allow-Credentials",
   ],
   credentials: true,
   optionsSuccessStatus: 200,
-  preflightContinue: false
+  preflightContinue: false,
 };
 
 // Middleware para manejar CORS manualmente
 app.use((req, res, next) => {
   // Lista de orígenes permitidos
   const allowedOrigins = [
-    'http://localhost:8081',
-    'http://localhost:19000',
-    'http://localhost:5173',
-    'http://localhost:5000',
+    "http://localhost:8081",
+    "http://localhost:19000",
+    "http://localhost:5173",
+    "http://localhost:5000",
     /^http:\/\/192\.168\.\d{1,3}\.\d{1,3}:\d+$/,
     /^http:\/\/10\.\d{1,3}\.\d{1,3}\.\d{1,3}:\d+$/,
     /^http:\/\/172\.(1[6-9]|2[0-9]|3[0-1])\.\d{1,3}\.\d{1,3}:\d+$/,
@@ -111,16 +111,16 @@ app.use((req, res, next) => {
     /^https?:\/\/padelsag-back\.onrender\.com$/,
     /^https?:\/\/padelsag-web\.onrender\.com$/,
     /^https?:\/\/padelsag\.onrender\.com$/,
-    /^https?:\/\/padelup\-frontend\.onrender\.com$/
+    /^https?:\/\/padelup\-frontend\.onrender\.com$/,
   ];
 
-  const origin = req.headers.origin || '';
+  const origin = req.headers.origin || "";
   let isAllowed = !origin; // Permitir solicitudes sin origen
 
   // Verificar si el origen está en la lista de permitidos
   if (origin) {
-    isAllowed = allowedOrigins.some(allowedOrigin => {
-      if (typeof allowedOrigin === 'string') {
+    isAllowed = allowedOrigins.some((allowedOrigin) => {
+      if (typeof allowedOrigin === "string") {
         return origin === allowedOrigin;
       } else if (allowedOrigin instanceof RegExp) {
         return allowedOrigin.test(origin);
@@ -131,17 +131,23 @@ app.use((req, res, next) => {
 
   // Configurar encabezados CORS
   if (isAllowed) {
-    res.header('Access-Control-Allow-Origin', origin);
-    res.header('Access-Control-Allow-Methods', 'GET, POST, PUT, DELETE, PATCH, OPTIONS');
-    res.header('Access-Control-Allow-Headers', 'Content-Type, Authorization, X-Requested-With');
-    res.header('Access-Control-Allow-Credentials', 'true');
-    console.log(`✅ Origen permitido: ${origin || 'Sin origen'}`);
+    res.header("Access-Control-Allow-Origin", origin);
+    res.header(
+      "Access-Control-Allow-Methods",
+      "GET, POST, PUT, DELETE, PATCH, OPTIONS"
+    );
+    res.header(
+      "Access-Control-Allow-Headers",
+      "Content-Type, Authorization, X-Requested-With"
+    );
+    res.header("Access-Control-Allow-Credentials", "true");
+    console.log(`✅ Origen permitido: ${origin || "Sin origen"}`);
   } else {
     console.log(`❌ Origen no permitido: ${origin}`);
   }
 
   // Responder inmediatamente a las solicitudes OPTIONS
-  if (req.method === 'OPTIONS') {
+  if (req.method === "OPTIONS") {
     return res.status(200).end();
   }
 
