@@ -86,6 +86,6 @@ tournamentSchema.index({ name: 1, startDate: 1 }, { unique: true });
 tournamentSchema.index({ isActive: 1 });
 tournamentSchema.index({ startDate: 1 });
 
-const Tournament = mongoose.model<ITournament>('Tournament', tournamentSchema);
+const Tournament = mongoose.model<ITournament>('Tournament', tournamentSchema, 'tournaments');
 
 export default Tournament;

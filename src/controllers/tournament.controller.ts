@@ -79,14 +79,23 @@ export const getTournaments = async (req: Request, res: Response) => {
     const { activeOnly = "true" } = req.query;
     const filter: any = {};
 
+    // Si activeOnly es "true", filtrar solo torneos activos
+    // Pero no filtrar por fecha para permitir ver todos los torneos activos
     if (activeOnly === "true") {
       filter.isActive = true;
-      filter.startDate = { $gte: new Date() };
     }
+
+    console.log(
+      "🔍 Buscando torneos con filtro:",
+      JSON.stringify(filter, null, 2)
+    );
+    console.log("📅 Fecha actual:", new Date().toISOString());
 
     const tournaments = await Tournament.find(filter)
       .sort({ startDate: 1 })
       .lean();
+
+    console.log(`✅ Encontrados ${tournaments.length} torneos`);
 
     res.status(200).json({
       success: true,
