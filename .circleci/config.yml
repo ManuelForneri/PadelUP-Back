@@ -1,0 +1,46 @@
+version: 2.1
+
+orbs:
+  node: circleci/node@5.0.2
+  coveralls: coveralls/coveralls@2.2.5
+
+jobs:
+  build_and_test:
+    docker:
+      - image: cimg/node:20.11.1
+        environment:
+          DATABASE_HOST: 0.0.0.0
+          DATABASE_PORT: 5432
+          DATABASE_USER: postgres
+          DATABASE_PASSWORD: postgres
+          DATABASE_NAME: test_userdb
+          DATABASE_SYNCHRONIZE: true
+          POKEMON_API_URL: https://pokeapi.co/api/v2/pokemon
+          COVERALLS_REPO_TOKEN: qDLfbs2WKPGziYDp3dcGJv9WMovimcGtd
+
+      - image: cimg/postgres:15.10
+        environment:
+          POSTGRES_USER: postgres
+          POSTGRES_PASSWORD: postgres
+          POSTGRES_DB: test_userdb
+    steps:
+      - checkout
+      - node/install-packages:
+          pkg-manager: npm
+      - run:
+          command: COVERALLS_REPO_TOKEN=qDLfbs2WKPGziYDp3dcGJv9WMovimcGtd npm run test:cov
+          name: Run tests
+      - run:
+          command: npm run build
+          name: Build app
+      - persist_to_workspace:
+          root: ~/project
+          paths: .
+      - coveralls/upload:
+          parallel: true
+          flag_name: Test 1
+          verbose: true
+workflows:
+  build_and_test:
+    jobs:
+      - build_and_test

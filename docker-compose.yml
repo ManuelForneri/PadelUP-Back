@@ -1,0 +1,18 @@
+version: '3.8'
+
+services:
+  padelup-db:
+    image: postgres:15-alpine
+    container_name: padelup-postgres
+    restart: always
+    environment:
+      POSTGRES_USER: ${DB_USER:-postgres}
+      POSTGRES_PASSWORD: ${DB_PASSWORD:-postgres}
+      POSTGRES_DB: ${DB_NAME:-padelup_db}
+    ports:
+      - '5432:5432'
+    volumes:
+      - padelup-db-data:/var/lib/postgresql/data
+
+volumes:
+  padelup-db-data:
