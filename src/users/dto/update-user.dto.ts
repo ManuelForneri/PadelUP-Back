@@ -1,28 +1,52 @@
-import { ApiProperty } from '@nestjs/swagger';
+import { ApiPropertyOptional } from '@nestjs/swagger';
+import { IsEnum, IsOptional, IsString, IsDateString } from 'class-validator';
+import {
+  CourtSide,
+  DominantHand,
+  UserCategory,
+  UserRole,
+  UserStatus,
+} from '../user.entity';
 
 export class UpdateUserDto {
-  @ApiProperty({
-    description: 'The username of the user',
-    example: 'Update username',
-  })
-  username?: string;
+  @ApiPropertyOptional({ enum: UserRole })
+  @IsOptional()
+  @IsEnum(UserRole)
+  role?: UserRole;
 
-  @ApiProperty({
-    description: 'The email of the user',
-    example: 'update@example.com',
-  })
-  email?: string;
+  @ApiPropertyOptional({ enum: UserStatus })
+  @IsOptional()
+  @IsEnum(UserStatus)
+  status?: UserStatus;
 
-  @ApiProperty({
-    description: 'The password of the user',
-    example: 'Update password',
-  })
-  password?: string;
+  @ApiPropertyOptional({ enum: UserCategory })
+  @IsOptional()
+  @IsEnum(UserCategory)
+  category?: UserCategory;
 
-  @ApiProperty({
-    description: 'The favourite pokemon of the user',
-    example: 'Pikachu',
-    required: false,
+  @ApiPropertyOptional({ enum: CourtSide })
+  @IsOptional()
+  @IsEnum(CourtSide)
+  court_side?: CourtSide;
+
+  @ApiPropertyOptional({ enum: DominantHand })
+  @IsOptional()
+  @IsEnum(DominantHand)
+  dominant_hand?: DominantHand;
+
+  @ApiPropertyOptional({
+    description: 'Fecha de nacimiento',
+    example: '1995-08-15',
   })
-  favouritePokemon?: string;
+  @IsOptional()
+  @IsDateString()
+  birth_date?: Date;
+
+  @ApiPropertyOptional({
+    description: 'Teléfono (opcional)',
+    example: '+5491112345678',
+  })
+  @IsOptional()
+  @IsString()
+  phone?: string;
 }

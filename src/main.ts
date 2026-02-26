@@ -7,10 +7,12 @@ async function bootstrap() {
   const app = await NestFactory.create(AppModule);
 
   const config = new DocumentBuilder()
-    .setTitle('Documentación de la API')
-    .setDescription('Esta es la documentación de la API de usuarios')
+    .setTitle('PadelUP API')
+    .setDescription('Documentación de la API de PadelUP - Liga SAG')
     .setVersion('1.0')
+    .addTag('auth')
     .addTag('users')
+    .addBearerAuth()
     .build();
   const document = SwaggerModule.createDocument(app, config);
   SwaggerModule.setup('api', app, document);

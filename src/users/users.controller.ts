@@ -6,108 +6,105 @@ import {
   Param,
   Post,
   Put,
-  ParseIntPipe,
+  Patch,
+  UseGuards,
 } from '@nestjs/common';
 import {
-  ApiTags,
+  ApiBearerAuth,
   ApiOperation,
   ApiResponse,
-  ApiBody,
-  ApiParam,
+  ApiTags,
 } from '@nestjs/swagger';
 import { User } from './user.entity';
 import { UsersService } from './users.service';
-import { CreateUserDto } from './dto/create-user.dto';
 import { UpdateUserDto } from './dto/update-user.dto';
+import { CompleteProfileDto } from './dto/complete-profile.dto';
+import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
+import { RolesGuard } from '../auth/guards/roles.guard';
+import { Roles } from '../auth/decorators/roles.decorator';
+import { CurrentUser } from '../auth/decorators/current-user.decorator';
+import { UserRole } from './user.entity';
 
 @ApiTags('users')
 @Controller('users')
 export class UsersController {
   constructor(private usersService: UsersService) {}
 
+  // ─── Rutas públicas ───────────────────────────────────────────────
+
+  // ─── Rutas protegidas (cualquier usuario autenticado) ─────────────
+
+  @Patch('me/profile')
+  @UseGuards(JwtAuthGuard)
+  @ApiBearerAuth()
+  @ApiOperation({
+    summary: 'Completar perfil del usuario (paso 2 del registro)',
+  })
+  @ApiResponse({
+    status: 200,
+    description: 'Perfil completado exitosamente.',
+    type: User,
+  })
+  async completeProfile(
+    @CurrentUser() currentUser: User,
+    @Body() dto: CompleteProfileDto,
+  ): Promise<User> {
+    return this.usersService.completeProfile(currentUser.id, dto);
+  }
+
+  // ─── Rutas de Admin ───────────────────────────────────────────────
+
   @Get()
-  @ApiOperation({ summary: 'Get all users' })
-  @ApiResponse({ status: 200, description: 'Return all users.', type: [User] })
+  @UseGuards(JwtAuthGuard, RolesGuard)
+  @Roles(UserRole.ADMIN)
+  @ApiBearerAuth()
+  @ApiOperation({ summary: '[ADMIN] Obtener todos los usuarios' })
+  @ApiResponse({
+    status: 200,
+    description: 'Listado de usuarios.',
+    type: [User],
+  })
   async findAll(): Promise<User[]> {
     return this.usersService.findAll();
   }
 
   @Get(':id')
-  @ApiOperation({ summary: 'Get a user by id' })
-  @ApiResponse({
-    status: 200,
-    description: 'Return a user.',
-    type: User,
-  })
-  async findOne(@Param('id', ParseIntPipe) id: string): Promise<User> {
+  @UseGuards(JwtAuthGuard, RolesGuard)
+  @Roles(UserRole.ADMIN)
+  @ApiBearerAuth()
+  @ApiOperation({ summary: '[ADMIN] Obtener un usuario por id' })
+  @ApiResponse({ status: 200, description: 'Usuario encontrado.', type: User })
+  async findOne(@Param('id') id: string): Promise<User> {
     return this.usersService.findById(id);
   }
 
-  @Post()
-  @ApiOperation({ summary: 'Create a user' })
-  @ApiResponse({
-    status: 201,
-    description: 'The user has been successfully created.',
-    type: User,
-  })
-  @ApiBody({
-    type: CreateUserDto,
-    description: 'User data (id is not required)',
-  })
-  async create(@Body() userData: CreateUserDto): Promise<User> {
-    return this.usersService.create(userData);
-  }
-
   @Put(':id')
-  @ApiOperation({ summary: 'Update a user by id' })
-  @ApiParam({
-    name: 'id',
-    type: 'string',
-    description: 'The unique identifier of the user to update',
-    example: 'a1b2c3d4-e5f6-7890-abcd-ef1234567890',
+  @UseGuards(JwtAuthGuard, RolesGuard)
+  @Roles(UserRole.ADMIN)
+  @ApiBearerAuth()
+  @ApiOperation({
+    summary:
+      '[ADMIN] Actualizar un usuario (asignar categoría, cambiar rol, etc.)',
   })
-  @ApiBody({
-    type: UpdateUserDto,
-    description: 'User data to update (all fields are optional)',
-  })
-  @ApiResponse({
-    status: 200,
-    description: 'The user has been successfully updated.',
-    type: User,
-  })
-  @ApiResponse({
-    status: 404,
-    description: 'User not found.',
-  })
+  @ApiResponse({ status: 200, description: 'Usuario actualizado.', type: User })
   async update(
-    @Param('id', ParseIntPipe) id: string,
-    @Body() userData: Partial<User>,
+    @Param('id') id: string,
+    @Body() userData: UpdateUserDto,
   ): Promise<User> {
     return this.usersService.update(id, userData);
   }
 
   @Delete(':id')
-  @ApiOperation({ summary: 'Delete a user by id' })
-  @ApiParam({
-    name: 'id',
-    type: 'string',
-    description: 'The unique identifier of the user to delete',
-    example: 'a1b2c3d4-e5f6-7890-abcd-ef1234567890',
-  })
+  @UseGuards(JwtAuthGuard, RolesGuard)
+  @Roles(UserRole.ADMIN)
+  @ApiBearerAuth()
+  @ApiOperation({ summary: '[ADMIN] Eliminar un usuario' })
   @ApiResponse({
     status: 200,
-    description: 'The user has been successfully deleted.',
-    schema: {
-      type: 'boolean',
-      example: true,
-      description: 'Returns true if the user was deleted successfully',
-    },
+    description: 'Usuario eliminado.',
+    schema: { type: 'boolean' },
   })
-  @ApiResponse({
-    status: 404,
-    description: 'User not found.',
-  })
-  async remove(@Param('id', ParseIntPipe) id: string): Promise<boolean> {
+  async remove(@Param('id') id: string): Promise<boolean> {
     return this.usersService.delete(id);
   }
 }

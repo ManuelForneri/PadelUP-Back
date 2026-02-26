@@ -1,53 +1,54 @@
 import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
-import { IsEmail, IsEnum, IsOptional, IsString, IsUUID } from 'class-validator';
-import { CourtSide, DominantHand } from '../user.entity';
+import {
+  IsEmail,
+  IsEnum,
+  IsOptional,
+  IsString,
+  IsDateString,
+  IsPhoneNumber,
+} from 'class-validator';
+import {
+  CourtSide,
+  DominantHand,
+  UserCategory,
+  UserRole,
+  UserStatus,
+} from '../user.entity';
 
 export class CreateUserDto {
-  @ApiProperty({
-    description: 'Unique identifier of the user (UUID)',
-    example: 'a1b2c3d4-e5f6-7890-abcd-ef1234567890',
-  })
-  @IsUUID()
-  id: string;
-
-  @ApiProperty({
-    description: 'Email address of the user',
-    example: 'john@example.com',
-  })
+  @ApiProperty({ description: 'Email del usuario', example: 'juan@gmail.com' })
   @IsEmail()
   email: string;
 
-  @ApiProperty({ description: 'First name of the user', example: 'John' })
+  @ApiProperty({ description: 'Nombre', example: 'Juan' })
   @IsString()
   first_name: string;
 
-  @ApiProperty({ description: 'Last name of the user', example: 'Doe' })
+  @ApiProperty({ description: 'Apellido', example: 'Pérez' })
   @IsString()
   last_name: string;
 
-  @ApiPropertyOptional({
-    description: "UUID of the user's category",
-    example: 'f47ac10b-58cc-4372-a567-0e02b2c3d479',
-  })
+  @ApiPropertyOptional({ description: 'URL de la foto de perfil' })
   @IsOptional()
-  @IsUUID()
-  category_id?: string;
+  @IsString()
+  photo?: string;
 
-  @ApiPropertyOptional({
-    description: 'Preferred court side',
-    enum: CourtSide,
-    example: CourtSide.DRIVE,
-  })
-  @IsOptional()
-  @IsEnum(CourtSide)
-  court_side?: CourtSide;
+  @ApiProperty({ description: 'Google ID del usuario' })
+  @IsString()
+  google_id: string;
 
-  @ApiPropertyOptional({
-    description: 'Dominant hand of the player',
-    enum: DominantHand,
-    example: DominantHand.RIGHT,
-  })
+  @ApiPropertyOptional({ enum: UserRole, default: UserRole.PLAYER })
   @IsOptional()
-  @IsEnum(DominantHand)
-  dominant_hand?: DominantHand;
+  @IsEnum(UserRole)
+  role?: UserRole;
+
+  @ApiPropertyOptional({ enum: UserStatus, default: UserStatus.PENDING })
+  @IsOptional()
+  @IsEnum(UserStatus)
+  status?: UserStatus;
+
+  @ApiPropertyOptional({ enum: UserCategory })
+  @IsOptional()
+  @IsEnum(UserCategory)
+  category?: UserCategory;
 }
