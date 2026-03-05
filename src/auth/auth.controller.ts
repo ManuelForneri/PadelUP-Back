@@ -1,10 +1,11 @@
-import { Controller, Get, Req, UseGuards } from '@nestjs/common';
+import { Controller, Get, Req, Res, Query, UseGuards } from '@nestjs/common';
 import {
   ApiBearerAuth,
   ApiOperation,
   ApiResponse,
   ApiTags,
 } from '@nestjs/swagger';
+import type { Response } from 'express';
 import { AuthService, AuthResponse } from './auth.service';
 import { GoogleAuthGuard } from './guards/google-auth.guard';
 import { JwtAuthGuard } from './guards/jwt-auth.guard';
@@ -20,6 +21,7 @@ export class AuthController {
   /**
    * Paso 1: Redirige al usuario a la pantalla de login de Google.
    * El guard de Passport maneja la redirección automáticamente.
+   * Acepta ?redirect_uri=<deep_link> para que el callback sepa dónde redirigir.
    */
   @Get('google')
   @UseGuards(GoogleAuthGuard)
@@ -31,21 +33,42 @@ export class AuthController {
   /**
    * Paso 2: Google redirige aquí con el código de autorización.
    * Passport valida, llama a GoogleStrategy.validate(), y deja el perfil en req.user.
-   * Luego buscamos/creamos el usuario y devolvemos el JWT.
+   * Luego buscamos/creamos el usuario y redirigimos al deep link con el JWT.
+   *
+   * Si no hay state (llamada desde Swagger/browser), devuelve JSON como fallback.
    */
   @Get('google/callback')
   @UseGuards(GoogleAuthGuard)
-  @ApiOperation({ summary: 'Callback de Google OAuth — devuelve JWT' })
+  @ApiOperation({ summary: 'Callback de Google OAuth — redirige con JWT' })
   @ApiResponse({
-    status: 200,
-    description:
-      'Autenticación exitosa. Devuelve access_token y datos del usuario.',
+    status: 302,
+    description: 'Redirige al deep link del app con access_token.',
   })
   async googleCallback(
     @Req() req: { user: GoogleProfile },
-  ): Promise<AuthResponse> {
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    @Res() res: any,
+    @Query('state') state?: string,
+  ): Promise<void> {
     const user = await this.authService.validateGoogleUser(req.user);
-    return this.authService.generateToken(user);
+    const authResponse = this.authService.generateToken(user);
+
+    // Si hay state, es el redirect_uri del app codificado en base64
+    if (state) {
+      try {
+        const redirectUri = Buffer.from(state, 'base64').toString('utf-8');
+        const params = new URLSearchParams({
+          token: authResponse.access_token,
+          profile_completed: String(authResponse.profile_completed),
+        });
+        return res.redirect(`${redirectUri}?${params.toString()}`);
+      } catch {
+        // state inválido → fallback a JSON
+      }
+    }
+
+    // Fallback para testing desde Swagger o browser
+    res.json(authResponse);
   }
 
   /**
