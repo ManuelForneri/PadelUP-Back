@@ -7,10 +7,6 @@
   "license": "UNLICENSED",
   "scripts": {
     "build": "nest build",
-    "create-migration": "typeorm migration:create ./src/migrations/removeFavouritePokemon",
-    "generate-migration": "typeorm migration:generate ./src/migrations/auto-migration -d dist/data-source.js",
-    "apply-migration-up": "typeorm migration:run -d dist/data-source.js",
-    "apply-migration-down": "typeorm migration:revert -d dist/data-source.js",
     "format": "prettier --write \"src/**/*.ts\" \"test/**/*.ts\"",
     "start": "nest start",
     "start:dev": "nest start --watch",
@@ -21,7 +17,12 @@
     "test:watch": "jest --watch",
     "test:cov": "jest --coverage --config ./test/jest-e2e.json --runInBand && coveralls < ./coverage/lcov.info",
     "test:debug": "node --inspect-brk -r tsconfig-paths/register -r ts-node/register node_modules/.bin/jest --runInBand",
-    "test:e2e": "jest --config ./test/jest-e2e.json"
+    "test:e2e": "jest --config ./test/jest-e2e.json",
+    "typeorm": "ts-node -r tsconfig-paths/register ./node_modules/typeorm/cli.js",
+    "migration:create": "npm run typeorm -- migration:create ./src/migrations/InitialTournamentSetup",
+    "migration:generate": "npm run typeorm -- migration:generate ./src/migrations/InitialTournamentSetup -d ./config/data-source.ts",
+    "migration:run": "npm run typeorm -- migration:run -d ./config/data-source.ts",
+    "migration:revert": "npm run typeorm -- migration:revert -d ./config/data-source.ts"
   },
   "dependencies": {
     "@nestjs/axios": "^4.0.1",

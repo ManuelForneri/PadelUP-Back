@@ -7,11 +7,14 @@ export const AppDataSource = new DataSource({
   username: process.env.DATABASE_USER || 'postgres',
   password: process.env.DATABASE_PASSWORD || 'postgres',
   database: process.env.DATABASE_NAME || 'padelup_db',
-  entities: [__dirname + '/**/*.entity{.ts,.js}'],
+
+  entities: [__dirname + '/../src/**/*.entity{.ts,.js}'],
+
   migrations: [
-    __dirname + '/migrations/*{.ts,.js}',
-    __dirname + '/seed-migrations/*{.ts,.js}',
+    __dirname + '/../src/migrations/*{.ts,.js}',
+    __dirname + '/../src/seed-migrations/*{.ts,.js}',
   ],
+
   migrationsTableName: 'custom_migrations_table',
   synchronize: false,
 });
