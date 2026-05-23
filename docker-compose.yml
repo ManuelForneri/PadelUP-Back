@@ -4,7 +4,7 @@ services:
   padelup-db:
     image: postgres:15-alpine
     container_name: padelup-postgres
-    restart: on-failure
+    restart: no
     environment:
       POSTGRES_USER: ${DB_USER:-postgres}
       POSTGRES_PASSWORD: ${DB_PASSWORD:-postgres}
